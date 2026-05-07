@@ -13,23 +13,66 @@ body,
 body {
   overflow: hidden;
 }
-
-main {
+.app{
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+.map {
   width: 100%;
-  height: 100dvh;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+}
+.navbar {
+  position: absolute;
+  top: 10px;
+  left: 950px;
+  width: 320px;
+  height: 60px;
+  background-color: rgb(251, 249, 249);
+  z-index: 10;
+}
+.userPanel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 50px;
+  height: 50px;
+  background-color: rgb(255, 255, 255);
+  z-index: 10;
+}
+.sidebar {
+  position: absolute;
+  display: none;
+  top: 0px;
+  left: 0px;
+  width: 320px;
+  background-color: rgb(114, 114, 114);
+  z-index: 30;
+}
+.routePanel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 25%;
+  
+  z-index: 10;
 }
 
 .map-wrapper {
   width: 100%;
   height: 100%;
+  
 }
 
-.map {
-  width: 100%;
-  height: 100%;
-}
+
 
 .leaflet-container {
   width: 100%;
   height: 100%;
 }
+
