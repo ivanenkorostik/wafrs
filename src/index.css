@@ -76,3 +76,27 @@ body {
   height: 100%;
 }
 
+.route-marker {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 40px;
+  border-radius: 16px 16px 16px 4px;
+  color: rgb(255, 255, 255);
+  font-size: 14px;
+  font-weight: 800;
+  transform: rotate(-45deg);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.28);
+}
+
+.route-marker span {
+  transform: rotate(45deg);
+}
+
+.route-marker--start {
+  background-color: rgb(22, 163, 74);
+}
+
+.route-marker--end {
+  background-color: rgb(220, 38, 38);
+}
