@@ -1,14 +1,23 @@
+import { useEffect } from 'react';
 import { divIcon } from 'leaflet';
-import { MapContainer, Marker, Popup, TileLayer, ZoomControl, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, Polyline, Popup, TileLayer, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
+import type { RoutePoint, SelectedRoutePoint } from '../types';
 
 type MapViewProps = {
-  startMarker: [number, number] | null;
-  endMarker: [number, number] | null;
+  startMarker: SelectedRoutePoint;
+  endMarker: SelectedRoutePoint;
+  routeCoordinates: RoutePoint[] | null;
   onMapClick: (lat: number, lng: number) => void;
 };
 
 type MapClickHandlerProps = {
   onMapClick: (lat: number, lng: number) => void;
+};
+
+type FitBoundsToRoutePointsProps = {
+  startMarker: SelectedRoutePoint;
+  endMarker: SelectedRoutePoint;
+  routeCoordinates: RoutePoint[] | null;
 };
 
 const startIcon = divIcon({
@@ -37,7 +46,28 @@ function MapClickHandler({ onMapClick }: MapClickHandlerProps) {
   return null;
 }
 
-export default function MapView({ startMarker, endMarker, onMapClick }: MapViewProps) {
+function FitBoundsToRoutePoints({ startMarker, endMarker, routeCoordinates }: FitBoundsToRoutePointsProps) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!startMarker || !endMarker) {
+      return;
+    }
+
+    const boundsPoints = routeCoordinates && routeCoordinates.length > 1
+      ? routeCoordinates
+      : [startMarker, endMarker];
+
+    map.fitBounds(boundsPoints, {
+      padding: [48, 48],
+      maxZoom: 14,
+    });
+  }, [endMarker, map, routeCoordinates, startMarker]);
+
+  return null;
+}
+
+export default function MapView({ startMarker, endMarker, routeCoordinates, onMapClick }: MapViewProps) {
   const center: [number, number] = [49.4444, 32.0598]; // приблизно центр України / Черкаська область
 
   return (
@@ -57,6 +87,22 @@ export default function MapView({ startMarker, endMarker, onMapClick }: MapViewP
         />
 
         <MapClickHandler onMapClick={onMapClick} />
+        <FitBoundsToRoutePoints
+          startMarker={startMarker}
+          endMarker={endMarker}
+          routeCoordinates={routeCoordinates}
+        />
+
+        {routeCoordinates && routeCoordinates.length > 1 && (
+          <Polyline
+            positions={routeCoordinates}
+            pathOptions={{
+              color: "rgb(37, 99, 235)",
+              opacity: 0.85,
+              weight: 5,
+            }}
+          />
+        )}
 
         {startMarker && (
           <Marker icon={startIcon} position={startMarker}>
