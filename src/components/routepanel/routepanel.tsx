@@ -1,12 +1,14 @@
 import './routepanel.css';
 import RouteInfo from '../routeinfo/routeInfo';
-import type { ActivePoint, RouteSummary } from '../../types';
+import type { ActivePoint, RouteResult, RouteSummary } from '../../types';
 
 type RoutePanelProps = {
   startPoint: string;
   endPoint: string;
   fuel: number;
   activePoint: ActivePoint;
+  routes: RouteResult[];
+  activeRouteIndex: number;
   routeSummary: RouteSummary | null;
   routeError: string | null;
   isRouteLoading: boolean;
@@ -19,6 +21,7 @@ type RoutePanelProps = {
   onClearAll: () => void;
   onCreateRoute: () => void;
   onCalculateFuel: (value: number) => void;
+  onSelectRoute: (index: number) => void;
 };
 
 function RoutePanel({
@@ -26,6 +29,8 @@ function RoutePanel({
   endPoint,
   fuel,
   activePoint,
+  routes,
+  activeRouteIndex,
   routeSummary,
   routeError,
   isRouteLoading,
@@ -37,7 +42,8 @@ function RoutePanel({
   onClearEnd,
   onClearAll,
   onCreateRoute,
-  onCalculateFuel
+  onCalculateFuel,
+  onSelectRoute
 }: RoutePanelProps) {
   return (
     <section className="routePanel" aria-label="Route planner">
@@ -125,6 +131,41 @@ function RoutePanel({
           Очистити обидві точки
         </button>
       </form>
+
+      {routes.length > 1 && !isRouteLoading && (
+        <div className="routePanel_routes" aria-label="Альтернативні маршрути">
+          <h5>Варіанти маршруту</h5>
+          <div className="routePanel_routeList">
+            {routes.map((route, index) => {
+              const fuelLiters = (route.distanceKm / 100) * fuel;
+              const isActive = index === activeRouteIndex;
+
+              return (
+                <button
+                  key={`${index}-${route.distanceKm}-${route.durationMin}`}
+                  className={`routePanel_routeOption ${isActive ? "routePanel_routeOption--active" : ""}`}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => onSelectRoute(index)}
+                >
+                  <span className="routePanel_routeTitle">
+                    {index === 0 ? "Основний" : `Альтернатива ${index}`}
+                  </span>
+                  <span>{route.distanceKm.toFixed(1)} км</span>
+                  <span>{Math.round(route.durationMin)} хв</span>
+                  <span>{fuelLiters.toFixed(1)} л</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {routes.length === 1 && !isRouteLoading && !routeError && (
+        <p className="routePanel_routeNote">
+          Для цих точок OSRM повернув тільки один маршрут.
+        </p>
+      )}
 
       <RouteInfo
         routeSummary={routeSummary}

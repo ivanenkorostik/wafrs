@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { divIcon } from 'leaflet';
 import { MapContainer, Marker, Polyline, Popup, TileLayer, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
-import type { RoutePoint, SelectedRoutePoint } from '../types';
+import type { RouteResult, SelectedRoutePoint } from '../types';
 
 type MapViewProps = {
   startMarker: SelectedRoutePoint;
   endMarker: SelectedRoutePoint;
-  routeCoordinates: RoutePoint[] | null;
+  routes: RouteResult[];
+  activeRouteIndex: number;
+  onSelectRoute: (index: number) => void;
   onMapClick: (lat: number, lng: number) => void;
 };
 
@@ -17,7 +19,7 @@ type MapClickHandlerProps = {
 type FitBoundsToRoutePointsProps = {
   startMarker: SelectedRoutePoint;
   endMarker: SelectedRoutePoint;
-  routeCoordinates: RoutePoint[] | null;
+  activeRoute: RouteResult | null;
 };
 
 const startIcon = divIcon({
@@ -46,7 +48,7 @@ function MapClickHandler({ onMapClick }: MapClickHandlerProps) {
   return null;
 }
 
-function FitBoundsToRoutePoints({ startMarker, endMarker, routeCoordinates }: FitBoundsToRoutePointsProps) {
+function FitBoundsToRoutePoints({ startMarker, endMarker, activeRoute }: FitBoundsToRoutePointsProps) {
   const map = useMap();
 
   useEffect(() => {
@@ -54,21 +56,29 @@ function FitBoundsToRoutePoints({ startMarker, endMarker, routeCoordinates }: Fi
       return;
     }
 
-    const boundsPoints = routeCoordinates && routeCoordinates.length > 1
-      ? routeCoordinates
+    const boundsPoints = activeRoute && activeRoute.coordinates.length > 1
+      ? activeRoute.coordinates
       : [startMarker, endMarker];
 
     map.fitBounds(boundsPoints, {
       padding: [48, 48],
       maxZoom: 14,
     });
-  }, [endMarker, map, routeCoordinates, startMarker]);
+  }, [activeRoute, endMarker, map, startMarker]);
 
   return null;
 }
 
-export default function MapView({ startMarker, endMarker, routeCoordinates, onMapClick }: MapViewProps) {
+export default function MapView({
+  startMarker,
+  endMarker,
+  routes,
+  activeRouteIndex,
+  onSelectRoute,
+  onMapClick,
+}: MapViewProps) {
   const center: [number, number] = [49.4444, 32.0598]; // приблизно центр України / Черкаська область
+  const activeRoute = routes[activeRouteIndex] ?? null;
 
   return (
     <div className="map-wrapper">
@@ -90,16 +100,33 @@ export default function MapView({ startMarker, endMarker, routeCoordinates, onMa
         <FitBoundsToRoutePoints
           startMarker={startMarker}
           endMarker={endMarker}
-          routeCoordinates={routeCoordinates}
+          activeRoute={activeRoute}
         />
 
-        {routeCoordinates && routeCoordinates.length > 1 && (
+        {routes.map((route, index) => (
+          index !== activeRouteIndex && (
+            <Polyline
+              key={`${index}-${route.distanceKm}-${route.durationMin}`}
+              positions={route.coordinates}
+              pathOptions={{
+                color: "rgb(14, 165, 233)",
+                opacity: 0.38,
+                weight: 4,
+              }}
+              eventHandlers={{
+                click: () => onSelectRoute(index),
+              }}
+            />
+          )
+        ))}
+
+        {activeRoute && (
           <Polyline
-            positions={routeCoordinates}
+            positions={activeRoute.coordinates}
             pathOptions={{
               color: "rgb(37, 99, 235)",
-              opacity: 0.85,
-              weight: 5,
+              opacity: 0.92,
+              weight: 6,
             }}
           />
         )}

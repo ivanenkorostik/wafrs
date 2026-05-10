@@ -1,51 +1,19 @@
 import type { RoutePoint, RouteResult } from "../types";
+import { fetchOsrmRoutes } from "./osrmClient";
+import { MAX_ROUTES_TO_SHOW, REQUESTED_ALTERNATIVES } from "./routeConfig";
 
-type OsrmRoute = {
-  distance: number;
-  duration: number;
-  
-  geometry: {
-    coordinates: [number, number][];
-  };
-};
+export async function fetchRoutes(start: RoutePoint, end: RoutePoint, signal?: AbortSignal): Promise<RouteResult[]> {
+  const routes = await fetchOsrmRoutes([start, end], REQUESTED_ALTERNATIVES, signal);
 
-type OsrmRouteResponse = {
-  code: string;
-  message?: string;
-  routes?: OsrmRoute[];
-};
-
-const OSRM_BASE_URL = import.meta.env.VITE_OSRM_BASE_URL ?? "https://router.project-osrm.org";
-
-function toOsrmCoordinate(point: RoutePoint) {
-  const [lat, lng] = point;
-  return `${lng},${lat}`;
+  return routes.slice(0, MAX_ROUTES_TO_SHOW);
 }
 
 export async function fetchRoute(start: RoutePoint, end: RoutePoint, signal?: AbortSignal): Promise<RouteResult> {
-  const coordinates = `${toOsrmCoordinate(start)};${toOsrmCoordinate(end)}`;
-  const params = new URLSearchParams({
-    overview: "full",
-    geometries: "geojson",
-  });
+  const routes = await fetchRoutes(start, end, signal);
 
-  const response = await fetch(`${OSRM_BASE_URL}/route/v1/driving/${coordinates}?${params}`, { signal });
-
-  if (!response.ok) {
-    throw new Error("Не вдалося отримати маршрут. Спробуйте ще раз.");
+  if (!routes[0]) {
+    throw new Error("Маршрут між цими точками не знайдено.");
   }
 
-  const data = (await response.json()) as OsrmRouteResponse;
-  const route = data.routes?.[0];
-
-  if (data.code !== "Ok" || !route) {
-    throw new Error(data.message ?? "Маршрут між цими точками не знайдено.");
-  }
-  const distanceKm = route.distance / 1000;
-
-  return {
-    coordinates: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
-    distanceKm: distanceKm,
-    durationMin: route.duration / 60,
-  };
+  return routes[0];
 }

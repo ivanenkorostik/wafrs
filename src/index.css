@@ -30,8 +30,8 @@ body {
 .navbar {
   position: absolute;
   top: 10px;
-  left: 950px;
-  width: 320px;
+  right: 80px;
+  width: 120px;
   height: 60px;
   background-color: rgb(251, 249, 249);
   z-index: 10;

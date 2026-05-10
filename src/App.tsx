@@ -5,7 +5,7 @@ import Navbar from './components/navbar/navbar'
 import RoutePanel from './components/routepanel/routepanel'
 import Sidebar from './components/sidebar/sidebar'
 import UserPanel from './components/user/userPanel'
-import { fetchRoute } from './services/routeService'
+import { fetchRoutes } from './services/routeService'
 import type { ActivePoint, RouteResult, SelectedRoutePoint } from './types'
 
 function App() {
@@ -15,15 +15,18 @@ function App() {
   const [startMarker, setStartMarker] = useState<SelectedRoutePoint>(null);
   const [endMarker, setEndMarker] = useState<SelectedRoutePoint>(null);
   const [activePoint, setActivePoint] = useState<ActivePoint>(null);
-  const [route, setRoute] = useState<RouteResult | null>(null);
+  const [routes, setRoutes] = useState<RouteResult[]>([]);
+  const [activeRouteIndex, setActiveRouteIndex] = useState(0);
   const [routeError, setRouteError] = useState<string | null>(null);
   const [isRouteLoading, setIsRouteLoading] = useState(false);
   const routeRequestController = useRef<AbortController | null>(null);
+  const activeRoute = routes[activeRouteIndex] ?? null;
 
   function clearRouteState() {
     routeRequestController.current?.abort();
     routeRequestController.current = null;
-    setRoute(null);
+    setRoutes([]);
+    setActiveRouteIndex(0);
     setRouteError(null);
     setIsRouteLoading(false);
   }
@@ -97,14 +100,16 @@ function App() {
     routeRequestController.current = controller;
 
     try {
-      const nextRoute = await fetchRoute(startMarker, endMarker, controller.signal);
-      setRoute(nextRoute);
+      const nextRoutes = await fetchRoutes(startMarker, endMarker, controller.signal);
+      setRoutes(nextRoutes);
+      setActiveRouteIndex(0);
     } catch (error) {
       if (controller.signal.aborted) {
         return;
       }
 
-      setRoute(null);
+      setRoutes([]);
+      setActiveRouteIndex(0);
       setRouteError(error instanceof Error ? error.message : "Маршрут не знайдено.");
     } finally {
       if (routeRequestController.current === controller) {
@@ -119,7 +124,9 @@ function App() {
       <MapView
         startMarker={startMarker}
         endMarker={endMarker}
-        routeCoordinates={route?.coordinates ?? null}
+        routes={routes}
+        activeRouteIndex={activeRouteIndex}
+        onSelectRoute={setActiveRouteIndex}
         onMapClick={handleMapClick}
       />
       <Navbar />
@@ -129,7 +136,9 @@ function App() {
         endPoint={endPoint}
         activePoint={activePoint}
         fuel={isfuel} 
-        routeSummary={route}
+        routes={routes}
+        activeRouteIndex={activeRouteIndex}
+        routeSummary={activeRoute}
         routeError={routeError}
         isRouteLoading={isRouteLoading}
         canCreateRoute={Boolean(startMarker && endMarker)}
@@ -141,6 +150,7 @@ function App() {
         onClearAll={clearRoutePoints}
         onCreateRoute={createRoute}
         onCalculateFuel={calculateFuel}
+        onSelectRoute={setActiveRouteIndex}
       />
       <Sidebar />
     </main>
