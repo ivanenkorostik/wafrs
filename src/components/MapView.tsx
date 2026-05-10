@@ -1,5 +1,9 @@
 import { useEffect } from 'react';
 import { divIcon } from 'leaflet';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { FaMapMarkerAlt } from 'react-icons/fa';
+import { FaMapMarker } from "react-icons/fa";
+
 import { MapContainer, Marker, Polyline, Popup, TileLayer, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
 import type { RouteResult, SelectedRoutePoint } from '../types';
 
@@ -24,7 +28,7 @@ type FitBoundsToRoutePointsProps = {
 
 const startIcon = divIcon({
   className: "route-marker route-marker--start",
-  html: "<span>A</span>",
+  html: renderToStaticMarkup(<FaMapMarkerAlt />),
   iconSize: [32, 40],
   iconAnchor: [16, 40],
   popupAnchor: [0, -36],
@@ -32,7 +36,7 @@ const startIcon = divIcon({
 
 const endIcon = divIcon({
   className: "route-marker route-marker--end",
-  html: "<span>B</span>",
+  html: renderToStaticMarkup(<FaMapMarker />),
   iconSize: [32, 40],
   iconAnchor: [16, 40],
   popupAnchor: [0, -36],
@@ -109,8 +113,8 @@ export default function MapView({
               key={`${index}-${route.distanceKm}-${route.durationMin}`}
               positions={route.coordinates}
               pathOptions={{
-                color: "rgb(14, 165, 233)",
-                opacity: 0.38,
+                color: "rgb(74, 150, 255)",
+                opacity: 0.7,
                 weight: 4,
               }}
               eventHandlers={{
@@ -124,9 +128,9 @@ export default function MapView({
           <Polyline
             positions={activeRoute.coordinates}
             pathOptions={{
-              color: "rgb(37, 99, 235)",
-              opacity: 0.92,
-              weight: 6,
+              color: "rgb(0, 81, 255)",
+              opacity: 1,
+              weight: 5,
             }}
           />
         )}

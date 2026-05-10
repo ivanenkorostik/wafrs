@@ -1,11 +1,11 @@
-
-
+import { FaCircleUser } from "react-icons/fa6";
+import "./userPanel.css";
 
 
 function UserPanel(){
     return (
         <section className="userPanel">
-            <h6>User Panel</h6>
+            <FaCircleUser className="user-icon" />
         </section>
     )
 }

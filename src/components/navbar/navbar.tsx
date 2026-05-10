@@ -1,11 +1,11 @@
-
-
+import { FaHistory } from "react-icons/fa";
+import "./navbar.css";
 
 
 function Navbar(){
     return(
         <section className="navbar">
-            <h1>Navbar</h1>
+            <FaHistory className="navbar-icon"/>
         </section>
     )
 }

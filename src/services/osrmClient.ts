@@ -3,7 +3,7 @@ import type { RoutePoint, RouteResult } from "../types";
 type OsrmRoute = {
   distance: number;
   duration: number;
-
+  average_speed: number;
   geometry: {
     coordinates: [number, number][];
   };
@@ -29,6 +29,7 @@ function mapOsrmRoute(route: OsrmRoute): RouteResult {
     coordinates: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
     distanceKm: distanceKm,
     durationMin: route.duration / 60,
+
   };
 }
 

@@ -1,11 +1,20 @@
 import type { RoutePoint, RouteResult } from "../types";
+import { fetchOrsRoutes } from "./orsClient";
 import { fetchOsrmRoutes } from "./osrmClient";
-import { MAX_ROUTES_TO_SHOW, REQUESTED_ALTERNATIVES } from "./routeConfig";
+import { MAX_ROUTES_TO_SHOW, ORS_MAX_ALTERNATIVE_DISTANCE_KM, REQUESTED_ALTERNATIVES } from "./routeConfig";
 
 export async function fetchRoutes(start: RoutePoint, end: RoutePoint, signal?: AbortSignal): Promise<RouteResult[]> {
-  const routes = await fetchOsrmRoutes([start, end], REQUESTED_ALTERNATIVES, signal);
+  const points = [start, end] satisfies RoutePoint[];
+  const osrmRoutes = await fetchOsrmRoutes(points, REQUESTED_ALTERNATIVES, signal);
+  const mainRoute = osrmRoutes[0];
 
-  return routes.slice(0, MAX_ROUTES_TO_SHOW);
+  if (!mainRoute || mainRoute.distanceKm >= ORS_MAX_ALTERNATIVE_DISTANCE_KM) {
+    return osrmRoutes.slice(0, MAX_ROUTES_TO_SHOW);
+  }
+
+  const orsRoutes = await fetchOrsRoutes(points, MAX_ROUTES_TO_SHOW, signal);
+
+  return orsRoutes.slice(0, MAX_ROUTES_TO_SHOW);
 }
 
 export async function fetchRoute(start: RoutePoint, end: RoutePoint, signal?: AbortSignal): Promise<RouteResult> {

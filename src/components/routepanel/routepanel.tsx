@@ -6,6 +6,7 @@ type RoutePanelProps = {
   startPoint: string;
   endPoint: string;
   fuel: number;
+  fueltype: string;
   activePoint: ActivePoint;
   routes: RouteResult[];
   activeRouteIndex: number;
@@ -22,12 +23,14 @@ type RoutePanelProps = {
   onCreateRoute: () => void;
   onCalculateFuel: (value: number) => void;
   onSelectRoute: (index: number) => void;
+  onFuelTypeChange: (value: string) => void;
 };
 
 function RoutePanel({
   startPoint,
   endPoint,
   fuel,
+  fueltype,
   activePoint,
   routes,
   activeRouteIndex,
@@ -43,8 +46,10 @@ function RoutePanel({
   onClearAll,
   onCreateRoute,
   onCalculateFuel,
-  onSelectRoute
+  onSelectRoute,
+  onFuelTypeChange
 }: RoutePanelProps) {
+  
   return (
     <section className="routePanel" aria-label="Route planner">
       <form className="routePanel_form">
@@ -111,6 +116,16 @@ function RoutePanel({
             placeholder="л / 100 км" 
             onChange={(e) => onCalculateFuel(parseFloat(e.target.value) || 0)}
           />
+          <select
+            id="fueltype"
+            value={fueltype}
+            onChange={(e) => onFuelTypeChange(e.target.value)}
+          >
+            <option value="92">А-92</option>
+            <option value="95">А-95</option>
+            <option value="diesel">Дизель</option>
+            <option value="lpg">Газ</option>
+          </select>
         </div>
 
         <button
@@ -172,6 +187,8 @@ function RoutePanel({
         routeError={routeError}
         isRouteLoading={isRouteLoading}
         fuel={fuel}
+        fueltype={fueltype}
+        
       />
         </section>
   );

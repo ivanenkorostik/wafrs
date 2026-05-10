@@ -1,0 +1,10 @@
+.navbar{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+.navbar-icon {
+    width: 30px;
+    height: 30px;
+    color: rgb(0, 0, 0);
+}

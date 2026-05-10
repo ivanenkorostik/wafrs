@@ -12,6 +12,7 @@ function App() {
   const [startPoint, setStartPoint] = useState("");
   const [endPoint, setEndPoint] = useState("");
   const [isfuel, setisfuel] = useState(0);
+  const [fueltype, setfueltype] = useState("92");
   const [startMarker, setStartMarker] = useState<SelectedRoutePoint>(null);
   const [endMarker, setEndMarker] = useState<SelectedRoutePoint>(null);
   const [activePoint, setActivePoint] = useState<ActivePoint>(null);
@@ -85,6 +86,9 @@ function App() {
   function calculateFuel(value: number) {
     setisfuel(value);
   }
+  function handleFuelTypeChange(value: string) {
+  setfueltype(value);
+}
 
   async function createRoute() {
     if (!startMarker || !endMarker) {
@@ -136,6 +140,7 @@ function App() {
         endPoint={endPoint}
         activePoint={activePoint}
         fuel={isfuel} 
+        fueltype={fueltype}
         routes={routes}
         activeRouteIndex={activeRouteIndex}
         routeSummary={activeRoute}
@@ -151,6 +156,7 @@ function App() {
         onCreateRoute={createRoute}
         onCalculateFuel={calculateFuel}
         onSelectRoute={setActiveRouteIndex}
+        onFuelTypeChange={handleFuelTypeChange}
       />
       <Sidebar />
     </main>
