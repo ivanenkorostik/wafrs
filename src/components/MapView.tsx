@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { divIcon } from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { FaMapMarkerAlt } from 'react-icons/fa';
-import { FaMapMarker } from "react-icons/fa";
+
 
 import { MapContainer, Marker, Polyline, Popup, TileLayer, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
 import type { RouteResult, SelectedRoutePoint } from '../types';
@@ -36,7 +36,7 @@ const startIcon = divIcon({
 
 const endIcon = divIcon({
   className: "route-marker route-marker--end",
-  html: renderToStaticMarkup(<FaMapMarker />),
+  html: renderToStaticMarkup(<FaMapMarkerAlt />),
   iconSize: [32, 40],
   iconAnchor: [16, 40],
   popupAnchor: [0, -36],
