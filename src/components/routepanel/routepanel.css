@@ -1,0 +1,226 @@
+.routePanel {
+  position: fixed;
+  width: min(400px, calc(100vw - 20px));
+  max-height: calc(100vh - 20px);
+  padding: 16px;
+  border: 1px solid rgba(20, 33, 61, 0.12);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.14);
+  overflow-y: auto;
+  
+  
+}
+
+.routePanel_form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.routePanel_field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.routePanel_field label {
+  color: rgb(31, 41, 55);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.routePanel_field input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid rgb(209, 213, 219);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: rgb(17, 24, 39);
+  background-color: rgb(249, 250, 251);
+  font: inherit;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.routePanel_inputRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  gap: 8px;
+}
+
+.routePanel_field input::placeholder {
+  color: rgb(107, 114, 128);
+}
+
+.routePanel_field input:focus {
+  border-color: rgb(37, 99, 235);
+  background-color: rgb(255, 255, 255);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.routePanel_field--active input {
+  border-color: rgb(37, 99, 235);
+  background-color: rgb(255, 255, 255);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.routePanel_button {
+  width: 100%;
+  height: 44px;
+  margin-top: 4px;
+  border: none;
+  border-radius: 8px;
+  color: rgb(255, 255, 255);
+  background-color: rgb(37, 99, 235);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.routePanel_button:hover:not(:disabled) {
+  background-color: rgb(29, 78, 216);
+}
+
+.routePanel_button:active {
+  transform: translateY(1px);
+}
+
+.routePanel_button:disabled,
+.routePanel_iconButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.routePanel_button--secondary {
+  color: rgb(31, 41, 55);
+  background-color: rgb(229, 231, 235);
+}
+
+.routePanel_button--secondary:hover:not(:disabled) {
+  background-color: rgb(209, 213, 219);
+}
+
+.routePanel_iconButton {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgb(209, 213, 219);
+  border-radius: 8px;
+  color: rgb(55, 65, 81);
+  background-color: rgb(255, 255, 255);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.routePanel_iconButton:hover:not(:disabled) {
+  border-color: rgb(156, 163, 175);
+  background-color: rgb(249, 250, 251);
+}
+
+.routePanel_routes {
+  margin-top: 14px;
+  color: rgb(31, 41, 55);
+}
+
+.routePanel_routes h5 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.routePanel_routeList {
+  display: grid;
+  gap: 8px;
+}
+
+.routePanel_routeOption {
+  display: grid;
+  grid-template-columns: minmax(30px, 1fr) auto auto auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 90px;
+  border: 1px solid rgb(209, 213, 219);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: rgb(55, 65, 81);
+  background-color: rgb(255, 255, 255);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.routePanel_routeOption:hover {
+  border-color: rgb(96, 165, 250);
+  background-color: rgb(248, 250, 252);
+}
+
+.routePanel_routeOption--active {
+  border-color: rgb(37, 99, 235);
+  background-color: rgb(239, 246, 255);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.routePanel_routeTitle {
+  color: rgb(17, 24, 39);
+  font-weight: 800;
+}
+
+.routePanel_routeNote {
+  margin: 14px 0 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: rgb(75, 85, 99);
+  background-color: rgb(249, 250, 251);
+  font-size: 13px;
+}
+
+.routeInfo {
+  margin-top: 14px;
+  color: rgb(31, 41, 55);
+}
+
+.routeInfo h5 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.routeInfo p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.routeInfo_error {
+  color: rgb(185, 28, 28);
+}
+
+.routeInfo_list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0;
+}
+
+.routeInfo_list div {
+  padding: 10px;
+  border-radius: 8px;
+  background-color: rgb(249, 250, 251);
+}
+
+.routeInfo_list dt {
+  margin-bottom: 4px;
+  color: rgb(107, 114, 128);
+  font-size: 12px;
+}
+
+.routeInfo_list dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+}
