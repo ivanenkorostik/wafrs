@@ -13,7 +13,7 @@ type RouteInfoProps = {
 function RouteInfo({ routeSummary, fuel, fueltype, routeError, isRouteLoading }: RouteInfoProps) {
 
     const averageSpeed = routeSummary ? routeSummary.distanceKm / (routeSummary.durationMin / 60) : 0;
- // Припустимо, що це середня витрата пального в літрах на 100 км
+    const fuelUsed = routeSummary ? (routeSummary.distanceKm * fuel) / 100 : 0;
 
     let fuelCost = 0;
     const fuel_95 = 73; // Припустимо, що ціна пального 73 грн за літр
@@ -21,16 +21,16 @@ function RouteInfo({ routeSummary, fuel, fueltype, routeError, isRouteLoading }:
     const fuel_diesel = 88;
     const fuel_lpg = 48; // Припустимо, що ціна пального 48 грн за літр
     if (routeSummary && fueltype === "92") {
-        fuelCost = (routeSummary.distanceKm / 100) * fuel * fuel_92;
+        fuelCost = fuelUsed * fuel_92;
     }
     if (routeSummary && fueltype === "95") {
-        fuelCost = (routeSummary.distanceKm / 100) * fuel * fuel_95;
+        fuelCost = fuelUsed * fuel_95;
     }
     if (routeSummary && fueltype === "diesel") {
-        fuelCost = (routeSummary.distanceKm / 100) * fuel * fuel_diesel;
+        fuelCost = fuelUsed * fuel_diesel;
     }
     else if (routeSummary && fueltype === "lpg") {
-        fuelCost = (routeSummary.distanceKm / 100) * fuel * fuel_lpg; // Припустимо, що ціна газу 48 грн за літр
+        fuelCost = fuelUsed * fuel_lpg; // Припустимо, що ціна газу 48 грн за літр
     }
 
 
@@ -55,6 +55,14 @@ function RouteInfo({ routeSummary, fuel, fueltype, routeError, isRouteLoading }:
                     <div>
                         <dt>Орієнтовна вартість пального</dt>
                         <dd>{fuelCost.toFixed(2)} грн</dd>
+                    </div>
+                    <div>
+                        <dt>Витрачено пального</dt>
+                        <dd>{fuelUsed.toFixed(2)} л</dd>
+                    </div>
+                    <div>
+                        <dt>Використана витрата</dt>
+                        <dd>{fuel.toFixed(2)} л/100 км</dd>
                     </div>
                     <div>
                         <dt>Середня швидкість</dt>

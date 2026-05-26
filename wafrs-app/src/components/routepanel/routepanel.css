@@ -8,9 +8,7 @@
   background-color: rgba(255, 255, 255, 0.96);
   box-shadow: 0 14px 36px rgba(15, 23, 42, 0.14);
   overflow-y: auto;
-  
-  
-}
+   }
 
 .routePanel_form {
   display: flex;
@@ -31,7 +29,7 @@
 }
 
 .routePanel_field input {
-  width: 100%;
+  width: 90%;
   height: 42px;
   border: 1px solid rgb(209, 213, 219);
   border-radius: 8px;

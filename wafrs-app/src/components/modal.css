@@ -6,8 +6,30 @@
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.modal-close-button {
+  width: 20%;
+  min-height: 30px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: rgb(0, 0, 0);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
 }
 
+.modal-close-button:hover {
+  background: #3f52c8;
+}
 .modal-content {
   width: min(420px, calc(100vw - 32px));
   padding: 24px;
@@ -28,23 +50,39 @@
   line-height: 1.5;
 }
 
-.modal-close-button {
-  width: 100%;
-  min-height: 44px;
-  border: 0;
-  border-radius: 6px;
-  background: #4b63e6;
-  color: #ffffff;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
 
-.modal-close-button:hover {
-  background: #3f52c8;
-}
 .vehicle-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
+
+}
+.modal_field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.modal_field input {
+    width: 100%;
+    height: 30px;
+    border: 1px solid rgb(209, 213, 219);
+    border-radius: 6px;
+    padding: 0 10px;
+    color: rgb(17, 24, 39);
+    background-color: rgb(249, 250, 251);
+    font: inherit;
+    outline: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+.modal-save-button {
+  width: 100%;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  color: rgb(255, 255, 255);
+  background-color: rgb(37, 99, 235);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease;
 }

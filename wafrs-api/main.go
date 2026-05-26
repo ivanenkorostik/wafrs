@@ -343,16 +343,57 @@ func writeError(w http.ResponseWriter, status int, message string) {
 // HANDLER FOR SAVING VEHICLE DATA
 func saveVehiclesHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
-			return
-		}
-
+		
 		user, ok := r.Context().Value(userContextKey).(User)
 		if !ok {
 			writeError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
+		if r.Method == http.MethodGet {
+			rows, err := db.Query(
+				`SELECT id, user_id, model, fuel_avg, fuel_city, fuel_type
+				FROM vehicles
+				WHERE user_id = $1
+				ORDER BY id DESC`,
+				user.ID,
+			)
+
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "failed to get vehicles")
+				return
+			}
+			defer rows.Close()
+
+			vehicles := []Vehicle{}
+
+			for rows.Next() {
+				var vehicle Vehicle
+
+				err := rows.Scan(
+				&vehicle.ID,
+				&vehicle.UserID,
+				&vehicle.Model,
+				&vehicle.FuelAvg,
+				&vehicle.FuelCity,
+				&vehicle.FuelType,
+				)
+
+				if err != nil {
+				writeError(w, http.StatusInternalServerError, "failed to read vehicle")
+				return
+				}
+
+				vehicles = append(vehicles, vehicle)
+			}
+
+			writeJSON(w, http.StatusOK, vehicles)
+			return
+		}
+		if r.Method != http.MethodPost {
+			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+		
 
 		var req VehicleRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

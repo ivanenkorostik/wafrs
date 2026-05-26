@@ -23,8 +23,28 @@ function normalizeMenuItems(data) {
   return Array.isArray(data.menuItem) ? data.menuItem : [data.menuItem];
 }
 
+function extractSpeedData(vehicle) {
+  const speedEntries = Object.entries(vehicle).filter(([key, value]) => {
+    const normalizedKey = key.toLowerCase();
+    const looksLikeSpeedField =
+      normalizedKey.includes("speed") ||
+      normalizedKey.includes("spd") ||
+      normalizedKey.includes("mph") ||
+      normalizedKey.includes("kmh") ||
+      normalizedKey.includes("kph");
+
+    return looksLikeSpeedField && value !== undefined && value !== null && value !== "";
+  });
+
+  if (speedEntries.length === 0) {
+    return null;
+  }
+
+  return Object.fromEntries(speedEntries);
+}
+
 async function main() {
-  const year = "2020";
+  const year = "2017";
   const make = "Mercedes-Benz";
 
   console.log("1. Отримуємо моделі...");
@@ -60,6 +80,7 @@ async function main() {
   const cityMpg = Number(vehicle.city08);
   const highwayMpg = Number(vehicle.highway08);
   const combinedMpg = Number(vehicle.comb08);
+  const speedData = extractSpeedData(vehicle);
 
   const result = {
     id: vehicle.id,
@@ -74,6 +95,13 @@ async function main() {
     cityConsumptionL100: mpgToLitersPer100Km(cityMpg),
     highwayConsumptionL100: mpgToLitersPer100Km(highwayMpg),
     combinedConsumptionL100: mpgToLitersPer100Km(combinedMpg),
+    speedDataAvailable: Boolean(speedData),
+    ...(speedData
+      ? { speedData }
+      : {
+          speedNote:
+            "FuelEconomy API не повернув конкретні швидкості для city/highway витрат цього авто.",
+        }),
   };
 
   console.log("\n4. Результат:");

@@ -1,4 +1,5 @@
 import './routepanel.css';
+import '../../styles/general.css';
 import RouteInfo from '../routeinfo/routeInfo';
 import type { ActivePoint, RouteResult, RouteSummary } from '../../types';
 
@@ -14,6 +15,8 @@ type RoutePanelProps = {
   routeError: string | null;
   isRouteLoading: boolean;
   canCreateRoute: boolean;
+  selectedVehicleModel: string | null;
+  fuelMode: string | null;
   onStartPointChange: (value: string) => void;
   onEndPointChange: (value: string) => void;
   setActivePoint: (value: ActivePoint) => void;
@@ -25,6 +28,7 @@ type RoutePanelProps = {
   onSelectRoute: (index: number) => void;
   onFuelTypeChange: (value: string) => void;
   onOpenModal: () => void;
+  
 };
 
 function RoutePanel({
@@ -39,6 +43,8 @@ function RoutePanel({
   routeError,
   isRouteLoading,
   canCreateRoute,
+  selectedVehicleModel,
+  fuelMode,
   onStartPointChange,
   onEndPointChange,
   setActivePoint,
@@ -46,9 +52,7 @@ function RoutePanel({
   onClearEnd,
   onClearAll,
   onCreateRoute,
-  onCalculateFuel,
   onSelectRoute,
-  onFuelTypeChange,
   onOpenModal
 }: RoutePanelProps) {
   
@@ -108,31 +112,19 @@ function RoutePanel({
           </div>
         </div>
 
-        <div className="routePanel_field">
-          <label htmlFor="fuel">Витрата пального</label>
-          <input 
-            id="fuel" 
-            type="number" 
-            min="0" 
-            step="0.1" 
-            placeholder="л / 100 км" 
-            onChange={(e) => onCalculateFuel(parseFloat(e.target.value) || 0)}
-          />
-          <select
-            id="fueltype"
-            value={fueltype}
-            onChange={(e) => onFuelTypeChange(e.target.value)}
-          >
-            <option value="92">А-92</option>
-            <option value="95">А-95</option>
-            <option value="diesel">Дизель</option>
-            <option value="lpg">Газ</option>
-          </select>
-        </div>
-        <button onClick={onOpenModal} className="routePanel_button" type="button">
-          + Порахувати вартість
-        </button>
-            
+        <section className="routePanel_myVehicle">
+          {selectedVehicleModel && (
+          <p className="routePanel_myVehicleModel">
+            Обране авто: {selectedVehicleModel}
+          </p>)}
+          {fuelMode && (
+            <p className="routePanel_selectedVehicle">
+              Режим витрати: {fuelMode}</p>)}
+          <p>Порахуй витрати</p>
+          <button onClick={onOpenModal} className="text-button" type="button">
+          + Додати авто
+          </button>
+        </section>           
         <button
           className="routePanel_button"
           type="button"
@@ -148,7 +140,7 @@ function RoutePanel({
           disabled={!startPoint && !endPoint}
           onClick={onClearAll}
         >
-          Очистити обидві точки
+          Очистити 
         </button>
       </form>
 

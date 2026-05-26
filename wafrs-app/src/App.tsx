@@ -8,6 +8,7 @@ import UserPanel from './components/user/userPanel'
 import { fetchRoutes } from './services/routeService'
 import type { ActivePoint, RouteResult, SelectedRoutePoint } from './types'
 import Modal from './components/modal';
+import type { Vehicle } from './api/mycar-api';
 
 function App() {
   const [startPoint, setStartPoint] = useState("");
@@ -24,6 +25,7 @@ function App() {
   const routeRequestController = useRef<AbortController | null>(null);
   const activeRoute = routes[activeRouteIndex] ?? null;
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
   function clearRouteState() {
     routeRequestController.current?.abort();
@@ -129,6 +131,34 @@ const openModal = () => {
         setIsRouteLoading(false);
       }
     }
+     
+  }
+  const averageSpeed = activeRoute
+    ? activeRoute.distanceKm / (activeRoute.durationMin / 60)
+    : 0;
+
+  let selectedVehicleFuel = isfuel;
+  let fuelMode: string | null = null;
+
+  if (selectedVehicle) {
+    const cityConsumption = selectedVehicle.fuel_city;
+    const cruiseConsumption = selectedVehicle.fuel_avg;
+
+    if (!activeRoute) {
+      selectedVehicleFuel = cruiseConsumption;
+    } else if (averageSpeed <= 35) {
+      selectedVehicleFuel = cityConsumption;
+      fuelMode = "Місто";
+    } else if (averageSpeed <= 65) {
+      selectedVehicleFuel = cityConsumption * 0.4 + cruiseConsumption * 0.6;
+      fuelMode = "Змішаний";
+    } else if (averageSpeed <= 90) {
+      selectedVehicleFuel = cruiseConsumption;
+      fuelMode = "Траса";
+    } else {
+      selectedVehicleFuel = cruiseConsumption * 1.15;
+      fuelMode = "Висока швидкість";
+    }
   }
 
   return (
@@ -147,8 +177,8 @@ const openModal = () => {
         startPoint={startPoint}
         endPoint={endPoint}
         activePoint={activePoint}
-        fuel={isfuel} 
-        fueltype={fueltype}
+        fuel={selectedVehicleFuel}
+        fueltype={selectedVehicle ? selectedVehicle.fuel_type : fueltype}
         routes={routes}
         activeRouteIndex={activeRouteIndex}
         routeSummary={activeRoute}
@@ -166,8 +196,11 @@ const openModal = () => {
         onSelectRoute={setActiveRouteIndex}
         onFuelTypeChange={handleFuelTypeChange}
         onOpenModal={openModal}
+        selectedVehicleModel={selectedVehicle?.model ?? null}
+        fuelMode={fuelMode}
       />
-      {isModalOpen && <Modal onClose={closeModal} />}
+      {isModalOpen && <Modal onClose={closeModal} onSelectVehicle={setSelectedVehicle}
+      />}
       <Sidebar />
     </main>
   )
