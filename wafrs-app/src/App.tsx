@@ -7,6 +7,7 @@ import Sidebar from './components/sidebar/sidebar'
 import UserPanel from './components/user/userPanel'
 import { fetchRoutes } from './services/routeService'
 import type { ActivePoint, RouteResult, SelectedRoutePoint } from './types'
+import Modal from './components/modal';
 
 function App() {
   const [startPoint, setStartPoint] = useState("");
@@ -22,6 +23,7 @@ function App() {
   const [isRouteLoading, setIsRouteLoading] = useState(false);
   const routeRequestController = useRef<AbortController | null>(null);
   const activeRoute = routes[activeRouteIndex] ?? null;
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   function clearRouteState() {
     routeRequestController.current?.abort();
@@ -89,6 +91,12 @@ function App() {
   function handleFuelTypeChange(value: string) {
   setfueltype(value);
 }
+const closeModal = () => {
+  setIsModalOpen(false);
+};
+const openModal = () => {
+  setIsModalOpen(true);
+};
 
   async function createRoute() {
     if (!startMarker || !endMarker) {
@@ -157,7 +165,9 @@ function App() {
         onCalculateFuel={calculateFuel}
         onSelectRoute={setActiveRouteIndex}
         onFuelTypeChange={handleFuelTypeChange}
+        onOpenModal={openModal}
       />
+      {isModalOpen && <Modal onClose={closeModal} />}
       <Sidebar />
     </main>
   )

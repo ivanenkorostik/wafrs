@@ -24,6 +24,7 @@ type RoutePanelProps = {
   onCalculateFuel: (value: number) => void;
   onSelectRoute: (index: number) => void;
   onFuelTypeChange: (value: string) => void;
+  onOpenModal: () => void;
 };
 
 function RoutePanel({
@@ -47,7 +48,8 @@ function RoutePanel({
   onCreateRoute,
   onCalculateFuel,
   onSelectRoute,
-  onFuelTypeChange
+  onFuelTypeChange,
+  onOpenModal
 }: RoutePanelProps) {
   
   return (
@@ -127,7 +129,10 @@ function RoutePanel({
             <option value="lpg">Газ</option>
           </select>
         </div>
-
+        <button onClick={onOpenModal} className="routePanel_button" type="button">
+          + Порахувати вартість
+        </button>
+            
         <button
           className="routePanel_button"
           type="button"

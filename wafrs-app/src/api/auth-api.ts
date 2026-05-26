@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8002";
+const API_URL = "/api";
 
 export type AuthResponse = {
   token: string;
@@ -10,7 +10,7 @@ export type User = {
 };
 
 export async function registerUser(email: string, password: string): Promise<User> {
-  const response = await fetch(`${API_URL}/api/auth/register`, {
+  const response = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -28,7 +28,7 @@ export async function registerUser(email: string, password: string): Promise<Use
 }
 
 export async function loginUser(email: string, password: string): Promise<AuthResponse> {
-  const response = await fetch(`${API_URL}/api/auth/login`, {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -46,7 +46,7 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
 }
 
 export async function getCurrentUser(token: string): Promise<User> {
-  const response = await fetch(`${API_URL}/api/me`, {
+  const response = await fetch(`${API_URL}/me`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,

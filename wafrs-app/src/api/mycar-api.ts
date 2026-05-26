@@ -1,0 +1,24 @@
+const API_URL = "/api";
+
+export type VehiclePayload = {
+    model: string;
+    fuel_avg: number;
+    fuel_city: number;
+    fuel_type: string;
+}
+export async function saveVehicle(payload: VehiclePayload, token: string){
+    const response = await fetch(`${API_URL}/my-vehicles`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.error || "Не вдалося зберегти авто");
+    }
+
+    return data;
+}

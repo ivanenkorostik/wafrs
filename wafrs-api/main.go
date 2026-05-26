@@ -34,6 +34,20 @@ type authClaims struct {
 	Email  string `json:"email"`
 	jwt.RegisteredClaims
 }
+type Vehicle struct {
+	ID       int64   `json:"id"`
+	UserID int64  `json:"user_id"`
+	Model string `json:"model"`
+	FuelAvg float64 `json:"fuel_avg"`
+	FuelCity float64 `json:"fuel_city"`
+	FuelType string `json:"fuel_type"`
+}
+type VehicleRequest struct {
+	Model string `json:"model"`
+	FuelAvg float64 `json:"fuel_avg"`
+	FuelCity float64 `json:"fuel_city"`
+	FuelType string `json:"fuel_type"`
+}
 
 type contextKey string
 
@@ -88,10 +102,11 @@ func main() {
 
 	http.HandleFunc("/auth/register", registerHandler(db))
 	http.HandleFunc("/auth/login", loginHandler(db, jwtSecret))
+	http.HandleFunc("/my-vehicles",authMiddleware(jwtSecret, saveVehiclesHandler(db)))
 	http.HandleFunc("/me", authMiddleware(jwtSecret, meHandler()))
 
 	fmt.Println("server started on :" + port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, corsMiddleware(http.DefaultServeMux)))
 }
 
 func initSchema(db *sql.DB) error {
@@ -243,6 +258,42 @@ func authMiddleware(jwtSecret string, next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+func corsMiddleware(next http.Handler) http.Handler {
+	allowedOrigins := map[string]bool{
+		"http://206.81.23.12:8081": true,
+		"http://localhost:5173": true,
+		"http://127.0.0.1:5173": true,
+		
+	}
+
+	if origins := os.Getenv("CORS_ALLOWED_ORIGINS"); origins != "" {
+		allowedOrigins = map[string]bool{}
+		for _, origin := range strings.Split(origins, ",") {
+			origin = strings.TrimSpace(origin)
+			if origin != "" {
+				allowedOrigins[origin] = true
+			}
+		}
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if allowedOrigins[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		}
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func createToken(user User, jwtSecret string) (string, error) {
 	claims := authClaims{
 		UserID: user.ID,
@@ -288,4 +339,68 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 
 func writeError(w http.ResponseWriter, status int, message string) {
 	writeJSON(w, status, map[string]string{"error": message})
+}
+// HANDLER FOR SAVING VEHICLE DATA
+func saveVehiclesHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+
+		user, ok := r.Context().Value(userContextKey).(User)
+		if !ok {
+			writeError(w, http.StatusUnauthorized, "unauthorized")
+			return
+		}
+
+		var req VehicleRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid json")
+			return
+		}
+
+		req.Model = strings.TrimSpace(req.Model)
+		req.FuelType = strings.TrimSpace(req.FuelType)
+
+		if req.Model == "" {
+			writeError(w, http.StatusBadRequest, "model is required")
+			return
+		}
+
+		if req.FuelAvg <= 0 || req.FuelCity <= 0 {
+			writeError(w, http.StatusBadRequest, "fuel values must be greater than zero")
+			return
+		}
+
+		var vehicle Vehicle
+		err := db.QueryRow(
+			`INSERT INTO vehicles (user_id, model, fuel_avg, fuel_city, fuel_type)
+			 VALUES ($1, $2, $3, $4, $5)
+			 RETURNING id, user_id, model, fuel_avg, fuel_city, fuel_type`,
+			user.ID,
+			req.Model,
+			req.FuelAvg,
+			req.FuelCity,
+			req.FuelType,
+		).Scan(
+			&vehicle.ID,
+			&vehicle.UserID,
+			&vehicle.Model,
+			&vehicle.FuelAvg,
+			&vehicle.FuelCity,
+			&vehicle.FuelType,
+		)
+
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to save vehicle")
+			return
+		}
+		if req.FuelType == "" {
+			writeError(w, http.StatusBadRequest, "fuel type is required")
+			return
+		}
+
+		writeJSON(w, http.StatusCreated, vehicle)
+	}
 }

@@ -1,0 +1,50 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  width: min(420px, calc(100vw - 32px));
+  padding: 24px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.24);
+}
+
+.modal-content h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+}
+
+.modal-content p {
+  margin: 0 0 20px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.modal-close-button {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 6px;
+  background: #4b63e6;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modal-close-button:hover {
+  background: #3f52c8;
+}
+.vehicle-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
