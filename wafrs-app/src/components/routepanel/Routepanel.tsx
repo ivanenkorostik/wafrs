@@ -1,8 +1,11 @@
 import './Routepanel.css';
 import '../../styles/general.css';
-import type { ActivePoint, RouteResult, RouteSummary,GeocodedPlace} from '../../types';
+import type { ActivePoint, GeocodedPlace, RouteResult, RouteSummary, SavedRoute } from '../../types';
 import { useState } from "react";
 import RouteDetails from "./RouteDetails";
+import { formatDuration } from '../../utils/routeFormat';
+import FavoriteRouteButton from "./FavoriteRouteButton";
+import type { SavedRoutePayload } from "../../api/save_route";
 
 type RoutePanelProps = {
   startPoint: string;
@@ -37,7 +40,9 @@ type RoutePanelProps = {
   onOpenModal: () => void;
   onSelectStartPlace: (place: GeocodedPlace) => void;
   onSelectEndPlace: (place: GeocodedPlace) => void;
-  
+  savedRoutes: SavedRoute[];
+  onSaveRoute: (payload: SavedRoutePayload) => Promise<void>;
+  onRemoveSavedRoute: (id: number) => Promise<void>;
 };
 
 function RoutePanel({
@@ -70,6 +75,9 @@ function RoutePanel({
   endSearchError,
   onSelectStartPlace,
   onSelectEndPlace,
+  savedRoutes,
+  onSaveRoute,
+  onRemoveSavedRoute,
   
 }: RoutePanelProps) {
 
@@ -229,32 +237,67 @@ function RoutePanel({
               const fuelLiters = (route.distanceKm / 100) * fuel;
               const isActive = index === activeRouteIndex;
               const direction = `${startPoint || "Старт"} → ${endPoint || "Фініш"}`;
+              const routePayload = {
+                start_location: startPoint || "Старт",
+                finish_location: endPoint || "Фініш",
+                distance: `${route.distanceKm.toFixed(1)} км`,
+                duration: formatDuration(route.durationMin),
+                fuel: `${fuelLiters.toFixed(1)} л`,
+              };
+
+              const savedRoute = savedRoutes.find(
+                (savedRoute) =>
+                  savedRoute.start_location.trim().toLowerCase() === routePayload.start_location.trim().toLowerCase() &&
+                  savedRoute.finish_location.trim().toLowerCase() === routePayload.finish_location.trim().toLowerCase()
+              );
               return (
                 <article
                   key={`${index}-${route.distanceKm}-${route.durationMin}`}
                   className={`routePanel_routeCard ${isActive ? "routePanel_routeCard--active" : ""}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-selected={isActive}
+                  onClick={() => onSelectRoute(index)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onSelectRoute(index);
+                    }
+                  }}
                   >
                     <div className="routePanel_routeCardTop">
                       <h3>Варіант {index + 1}</h3>
                       <div className="routePanel_routeBadges">
                         <span>{route.distanceKm.toFixed(1)} км</span>
-                        <span>{Math.round(route.durationMin)} хв</span>
+                        <span>{formatDuration(route.durationMin)}</span>
                         <span>{fuelLiters.toFixed(1)} л</span>
                       </div>
                     </div>
                     <p className="routePanel_routeDirection">{direction}</p>
+                    <div className="routePanel_routeCardBottom">
+                      <FavoriteRouteButton
+                        routePayload={routePayload}
+                        savedRoute={savedRoute}
+                        onSaveRoute={onSaveRoute}
+                        onRemoveRoute={onRemoveSavedRoute}
+                      />
+
                     <button className="routePanel_detailsButton"
                     type="button"
-                    onClick={() => handleOpenRouteDetails(index)}>
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleOpenRouteDetails(index);
+                    }}>
                       Детальніше
                     </button>
+                    </div>
                 </article>
               );
             })}
           </div>
         )}
         {routes.length === 0 && !isRouteLoading && !routeError && (
-    <p className="routePanel_emptyRoutes">інші маршрути.....</p>
+    <p className="routePanel_emptyRoutes">Прокладіть маршрут</p>
   )}
   </section>
 

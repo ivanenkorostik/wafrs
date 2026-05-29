@@ -11,6 +11,15 @@ import Modal from './components/vechicle/Vechicle-modal';
 import type { Vehicle } from './api/mycar-api';
 import { usePlaceSearch } from './hooks/userPlaceSearh';
 import { getVehicleFuelUsage } from "./utils/fuel";
+import SavedRoutesModal from './components/saveRoutes/modalRoutes';
+import { AUTH_TOKEN_KEY } from './constants/auth';
+import {
+  deleteSavedRoute,
+  getSavedRoutes,
+  saveRoute,
+  type SavedRoutePayload,
+} from './api/save_route';
+import type { SavedRoute } from './types';
 
 function App() {
   const [startPoint, setStartPoint] = useState("");
@@ -30,6 +39,10 @@ function App() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [startPlace, setStartPlace] = useState<GeocodedPlace | null>(null);
   const [endPlace, setEndPlace] = useState<GeocodedPlace | null>(null);
+  const [savedRoutes, setSavedRoutes] = useState<SavedRoute[]>([]);
+  const [isSavedRoutesModalOpen, setIsSavedRoutesModalOpen] = useState(false);
+  const [isSavedRoutesLoading, setIsSavedRoutesLoading] = useState(false);
+  const [savedRoutesError, setSavedRoutesError] = useState<string | null>(null);
   const {
   suggestions: startSuggestions,
   setSuggestions: setStartSuggestions,
@@ -192,7 +205,64 @@ const openModal = () => {
       fuel: selectedVehicleFuel,
       fuelMode,
     } = getVehicleFuelUsage(selectedVehicle, activeRoute,isfuel);
-  
+    async function loadSavedRoutes() {
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+
+      if (!token) {
+        setSavedRoutesError("Увійдіть в акаунт, щоб переглянути збережені маршрути");
+        return;
+      }
+
+      setIsSavedRoutesLoading(true);
+      setSavedRoutesError(null);
+
+      try {
+        const routes = await getSavedRoutes(token);
+        setSavedRoutes(routes);
+      } catch (error) {
+        setSavedRoutesError(
+          error instanceof Error ? error.message : "Не вдалося завантажити маршрути"
+        );
+        } finally {
+          setIsSavedRoutesLoading(false);
+        }
+    }
+
+    async function handleOpenSavedRoutes() {
+      setIsSavedRoutesModalOpen(true);
+      await loadSavedRoutes();
+    }
+
+    function handleCloseSavedRoutes() {
+      setIsSavedRoutesModalOpen(false);
+    }
+
+    async function handleSaveRoute(payload: SavedRoutePayload) {
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+
+      if (!token) {
+        setSavedRoutesError("Увійдіть в акаунт, щоб зберегти маршрут");
+        return;
+      }
+
+      const createdRoute = await saveRoute(payload, token);
+      setSavedRoutes((currentRoutes) => [createdRoute, ...currentRoutes]);
+    }
+
+  async function handleRemoveSavedRoute(id: number) {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+
+    if (!token) {
+      setSavedRoutesError("Увійдіть в акаунт, щоб видалити маршрут");
+      return;
+    }
+
+    await deleteSavedRoute(id, token);
+    setSavedRoutes((currentRoutes) =>
+      currentRoutes.filter((route) => route.id !== id)
+    );
+  }
+
 
   return (
     <main className='app'>
@@ -204,7 +274,7 @@ const openModal = () => {
         onSelectRoute={setActiveRouteIndex}
         onMapClick={handleMapClick}
       />
-      <Navbar />
+      <Navbar onOpenSavedRoutes={handleOpenSavedRoutes}/>
       <UserPanel />
       <RoutePanel
         startPoint={startPoint}
@@ -239,10 +309,22 @@ const openModal = () => {
         onOpenModal={openModal}
         selectedVehicleModel={selectedVehicle?.model ?? null}
         fuelMode={fuelMode}
+        savedRoutes={savedRoutes}
+        onSaveRoute={handleSaveRoute}
+        onRemoveSavedRoute={handleRemoveSavedRoute}
       />
       {isModalOpen && <Modal onClose={closeModal} onSelectVehicle={setSelectedVehicle}
       />}
       <Sidebar />
+      {isSavedRoutesModalOpen && (
+        <SavedRoutesModal
+          savedRoutes={savedRoutes}
+          isLoading={isSavedRoutesLoading}
+          error={savedRoutesError}
+          onClose={handleCloseSavedRoutes}
+          onDeleteRoute={handleRemoveSavedRoute}
+        />
+    )}
     </main>
   )
 }

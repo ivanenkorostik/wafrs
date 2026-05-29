@@ -94,10 +94,18 @@
   border-radius: 10px;
   padding: 18px;
   background: #fff;
+  cursor: pointer;
 }
 
 .routePanel_routeCard--active {
+  border-color: #5058f2;
+  border-width: 2px;
   box-shadow: 0 0 0 3px rgba(80, 88, 242, 0.14);
+}
+
+.routePanel_routeCard:focus-visible {
+  outline: 3px solid rgba(80, 88, 242, 0.35);
+  outline-offset: 2px;
 }
 
 .routePanel_routeCardTop {
@@ -131,10 +139,32 @@
   margin: 14px 0 10px;
   font-size: 16px;
 }
+.routePanel_routeCardBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.routePanel_favoriteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: #5058f2;
+  font-size: 34px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.routePanel_favoriteButton svg {
+  width: 34px;
+  height: 34px;
+}
 
 .routePanel_detailsButton {
-  display: block;
-  margin-left: auto;
   border: none;
   background: transparent;
   color: #111;

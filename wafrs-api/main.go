@@ -36,17 +36,35 @@ type authClaims struct {
 }
 type Vehicle struct {
 	ID       int64   `json:"id"`
-	UserID int64  `json:"user_id"`
-	Model string `json:"model"`
-	FuelAvg float64 `json:"fuel_avg"`
+	UserID   int64   `json:"user_id"`
+	Model    string  `json:"model"`
+	FuelAvg  float64 `json:"fuel_avg"`
 	FuelCity float64 `json:"fuel_city"`
-	FuelType string `json:"fuel_type"`
+	FuelType string  `json:"fuel_type"`
 }
 type VehicleRequest struct {
-	Model string `json:"model"`
-	FuelAvg float64 `json:"fuel_avg"`
+	Model    string  `json:"model"`
+	FuelAvg  float64 `json:"fuel_avg"`
 	FuelCity float64 `json:"fuel_city"`
-	FuelType string `json:"fuel_type"`
+	FuelType string  `json:"fuel_type"`
+}
+type SavedRoute struct {
+	ID             int64     `json:"id"`
+	UserID         int64     `json:"user_id"`
+	StartLocation  string    `json:"start_location"`
+	FinishLocation string    `json:"finish_location"`
+	Distance       string    `json:"distance"`
+	Duration       string    `json:"duration"`
+	Fuel           string    `json:"fuel"`
+	SavedAt        time.Time `json:"saved_at"`
+}
+
+type SavedRouteRequest struct {
+	StartLocation  string `json:"start_location"`
+	FinishLocation string `json:"finish_location"`
+	Distance       string `json:"distance"`
+	Duration       string `json:"duration"`
+	Fuel           string `json:"fuel"`
 }
 
 type contextKey string
@@ -100,10 +118,18 @@ func main() {
 		fmt.Fprintln(w, `{"database":"ok"}`)
 	})
 
+	savedRoutesHandlerWithAuth := authMiddleware(jwtSecret, savedRoutesHandler(db))
+	vehiclesHandlerWithAuth := authMiddleware(jwtSecret, saveVehiclesHandler(db))
+	meHandlerWithAuth := authMiddleware(jwtSecret, meHandler())
+
 	http.HandleFunc("/auth/register", registerHandler(db))
 	http.HandleFunc("/auth/login", loginHandler(db, jwtSecret))
-	http.HandleFunc("/my-vehicles",authMiddleware(jwtSecret, saveVehiclesHandler(db)))
-	http.HandleFunc("/me", authMiddleware(jwtSecret, meHandler()))
+	http.HandleFunc("/my-vehicles", vehiclesHandlerWithAuth)
+	http.HandleFunc("/api/saved-routes", savedRoutesHandlerWithAuth)
+	http.HandleFunc("/api/saved-routes/", savedRoutesHandlerWithAuth)
+	http.HandleFunc("/saved-routes", savedRoutesHandlerWithAuth)
+	http.HandleFunc("/saved-routes/", savedRoutesHandlerWithAuth)
+	http.HandleFunc("/me", meHandlerWithAuth)
 
 	fmt.Println("server started on :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, corsMiddleware(http.DefaultServeMux)))
@@ -116,7 +142,28 @@ func initSchema(db *sql.DB) error {
 			email TEXT NOT NULL UNIQUE,
 			password_hash TEXT NOT NULL,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-		)
+		);
+
+		CREATE TABLE IF NOT EXISTS vehicles (
+			id SERIAL PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			model TEXT NOT NULL,
+			fuel_avg DOUBLE PRECISION NOT NULL,
+			fuel_city DOUBLE PRECISION NOT NULL,
+			fuel_type TEXT NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS saved_routes (
+			id SERIAL PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			start_location TEXT NOT NULL,
+			finish_location TEXT NOT NULL,
+			distance TEXT NOT NULL DEFAULT '',
+			duration TEXT NOT NULL DEFAULT '',
+			fuel TEXT NOT NULL DEFAULT '',
+			saved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			UNIQUE(user_id, start_location, finish_location)
+		);
 	`)
 	return err
 }
@@ -261,9 +308,8 @@ func authMiddleware(jwtSecret string, next http.HandlerFunc) http.HandlerFunc {
 func corsMiddleware(next http.Handler) http.Handler {
 	allowedOrigins := map[string]bool{
 		"http://206.81.23.12:8081": true,
-		"http://localhost:5173": true,
-		"http://127.0.0.1:5173": true,
-		
+		"http://localhost:5173":    true,
+		"http://127.0.0.1:5173":    true,
 	}
 
 	if origins := os.Getenv("CORS_ALLOWED_ORIGINS"); origins != "" {
@@ -281,7 +327,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		if allowedOrigins[origin] {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		}
 
@@ -340,15 +386,16 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 func writeError(w http.ResponseWriter, status int, message string) {
 	writeJSON(w, status, map[string]string{"error": message})
 }
+
 // HANDLER FOR SAVING VEHICLE DATA
 func saveVehiclesHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		
 		user, ok := r.Context().Value(userContextKey).(User)
 		if !ok {
 			writeError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
+
 		if r.Method == http.MethodGet {
 			rows, err := db.Query(
 				`SELECT id, user_id, model, fuel_avg, fuel_city, fuel_type
@@ -357,7 +404,6 @@ func saveVehiclesHandler(db *sql.DB) http.HandlerFunc {
 				ORDER BY id DESC`,
 				user.ID,
 			)
-
 			if err != nil {
 				writeError(w, http.StatusInternalServerError, "failed to get vehicles")
 				return
@@ -368,19 +414,17 @@ func saveVehiclesHandler(db *sql.DB) http.HandlerFunc {
 
 			for rows.Next() {
 				var vehicle Vehicle
-
 				err := rows.Scan(
-				&vehicle.ID,
-				&vehicle.UserID,
-				&vehicle.Model,
-				&vehicle.FuelAvg,
-				&vehicle.FuelCity,
-				&vehicle.FuelType,
+					&vehicle.ID,
+					&vehicle.UserID,
+					&vehicle.Model,
+					&vehicle.FuelAvg,
+					&vehicle.FuelCity,
+					&vehicle.FuelType,
 				)
-
 				if err != nil {
-				writeError(w, http.StatusInternalServerError, "failed to read vehicle")
-				return
+					writeError(w, http.StatusInternalServerError, "failed to read vehicle")
+					return
 				}
 
 				vehicles = append(vehicles, vehicle)
@@ -389,11 +433,11 @@ func saveVehiclesHandler(db *sql.DB) http.HandlerFunc {
 			writeJSON(w, http.StatusOK, vehicles)
 			return
 		}
+
 		if r.Method != http.MethodPost {
 			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 			return
 		}
-		
 
 		var req VehicleRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -406,6 +450,11 @@ func saveVehiclesHandler(db *sql.DB) http.HandlerFunc {
 
 		if req.Model == "" {
 			writeError(w, http.StatusBadRequest, "model is required")
+			return
+		}
+
+		if req.FuelType == "" {
+			writeError(w, http.StatusBadRequest, "fuel type is required")
 			return
 		}
 
@@ -432,16 +481,165 @@ func saveVehiclesHandler(db *sql.DB) http.HandlerFunc {
 			&vehicle.FuelCity,
 			&vehicle.FuelType,
 		)
-
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "failed to save vehicle")
 			return
 		}
-		if req.FuelType == "" {
-			writeError(w, http.StatusBadRequest, "fuel type is required")
+
+		writeJSON(w, http.StatusCreated, vehicle)
+	}
+}
+
+func savedRoutesHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, ok := r.Context().Value(userContextKey).(User)
+		if !ok {
+			writeError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 
-		writeJSON(w, http.StatusCreated, vehicle)
+		if r.Method == http.MethodGet {
+			rows, err := db.Query(
+				`SELECT id, user_id, start_location, finish_location, distance, duration, fuel, saved_at
+				 FROM saved_routes
+				 WHERE user_id = $1
+				 ORDER BY saved_at DESC`,
+				user.ID,
+			)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "failed to get saved routes")
+				return
+			}
+			defer rows.Close()
+
+			savedRoutes := []SavedRoute{}
+
+			for rows.Next() {
+				var route SavedRoute
+				err := rows.Scan(
+					&route.ID,
+					&route.UserID,
+					&route.StartLocation,
+					&route.FinishLocation,
+					&route.Distance,
+					&route.Duration,
+					&route.Fuel,
+					&route.SavedAt,
+				)
+				if err != nil {
+					writeError(w, http.StatusInternalServerError, "failed to read saved route")
+					return
+				}
+
+				savedRoutes = append(savedRoutes, route)
+			}
+
+			writeJSON(w, http.StatusOK, savedRoutes)
+			return
+		}
+
+		if r.Method == http.MethodPost {
+			var req SavedRouteRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				writeError(w, http.StatusBadRequest, "invalid json")
+				return
+			}
+
+			req.StartLocation = strings.TrimSpace(req.StartLocation)
+			req.FinishLocation = strings.TrimSpace(req.FinishLocation)
+			req.Distance = strings.TrimSpace(req.Distance)
+			req.Duration = strings.TrimSpace(req.Duration)
+			req.Fuel = strings.TrimSpace(req.Fuel)
+
+			if req.StartLocation == "" {
+				writeError(w, http.StatusBadRequest, "start location is required")
+				return
+			}
+
+			if req.FinishLocation == "" {
+				writeError(w, http.StatusBadRequest, "finish location is required")
+				return
+			}
+
+			var route SavedRoute
+			err := db.QueryRow(
+				`INSERT INTO saved_routes
+				 (user_id, start_location, finish_location, distance, duration, fuel)
+				 VALUES ($1, $2, $3, $4, $5, $6)
+				 RETURNING id, user_id, start_location, finish_location, distance, duration, fuel, saved_at`,
+				user.ID,
+				req.StartLocation,
+				req.FinishLocation,
+				req.Distance,
+				req.Duration,
+				req.Fuel,
+			).Scan(
+				&route.ID,
+				&route.UserID,
+				&route.StartLocation,
+				&route.FinishLocation,
+				&route.Distance,
+				&route.Duration,
+				&route.Fuel,
+				&route.SavedAt,
+			)
+			if err != nil {
+				if strings.Contains(err.Error(), "duplicate key") {
+					writeError(w, http.StatusConflict, "route already saved")
+					return
+				}
+
+				writeError(w, http.StatusInternalServerError, "failed to save route")
+				return
+			}
+
+			writeJSON(w, http.StatusCreated, route)
+			return
+		}
+
+		if r.Method == http.MethodDelete {
+			idPart := strings.TrimPrefix(r.URL.Path, "/api/saved-routes/")
+			if idPart == r.URL.Path {
+				idPart = strings.TrimPrefix(r.URL.Path, "/saved-routes/")
+			}
+			if idPart == "" || idPart == r.URL.Path {
+				writeError(w, http.StatusBadRequest, "route id is required")
+				return
+			}
+
+			var routeID int64
+			_, err := fmt.Sscanf(idPart, "%d", &routeID)
+			if err != nil || routeID <= 0 {
+				writeError(w, http.StatusBadRequest, "invalid route id")
+				return
+			}
+
+			result, err := db.Exec(
+				`DELETE FROM saved_routes
+				 WHERE id = $1 AND user_id = $2`,
+				routeID,
+				user.ID,
+			)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "failed to delete route")
+				return
+			}
+
+			rowsAffected, err := result.RowsAffected()
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "failed to delete route")
+				return
+			}
+
+			if rowsAffected == 0 {
+				writeError(w, http.StatusNotFound, "saved route not found")
+				return
+			}
+
+			writeJSON(w, http.StatusOK, map[string]bool{"success": true})
+			return
+		}
+
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 	}
 }

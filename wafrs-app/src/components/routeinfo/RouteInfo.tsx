@@ -2,6 +2,7 @@
 import type { RouteSummary } from "../../types";
 import "./RouteInfo.css";
 import { calculateFuelCost, calculateFuelUsed, getAverageSpeed } from "../../utils/fuel";
+import { formatDuration } from "../../utils/routeFormat";
 
 type RouteInfoProps = {
     routeSummary: RouteSummary | null;
@@ -38,7 +39,7 @@ function RouteInfo({ routeSummary, fuel, fueltype, routeError, isRouteLoading }:
                     </div>
                     <div>
                         <dt>Час</dt>
-                        <dd>{Math.round(routeSummary.durationMin)} хв</dd>
+                        <dd>{formatDuration(routeSummary.durationMin)}</dd>
                     </div>
                     <div>
                         <dt>Орієнтовна вартість пального</dt>

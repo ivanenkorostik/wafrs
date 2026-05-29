@@ -27,6 +27,16 @@ export type GeocodedPlace = {
     
   };
 };
+export type SavedRoute = {
+  id: number;
+  start_location: string;
+  finish_location: string;
+  distance: string;
+  duration: string;
+  fuel: string;
+  saved_at: string;
+  user_id: number;
+};
 
 export type RouteResult = RouteSummary & {
   coordinates: RoutePoint[];
