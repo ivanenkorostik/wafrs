@@ -1,5 +1,7 @@
 
 import type { RouteSummary } from "../../types";
+import "./RouteInfo.css";
+import { calculateFuelCost, calculateFuelUsed, getAverageSpeed } from "../../utils/fuel";
 
 type RouteInfoProps = {
     routeSummary: RouteSummary | null;
@@ -12,26 +14,12 @@ type RouteInfoProps = {
 
 function RouteInfo({ routeSummary, fuel, fueltype, routeError, isRouteLoading }: RouteInfoProps) {
 
-    const averageSpeed = routeSummary ? routeSummary.distanceKm / (routeSummary.durationMin / 60) : 0;
-    const fuelUsed = routeSummary ? (routeSummary.distanceKm * fuel) / 100 : 0;
+    const averageSpeed = getAverageSpeed(routeSummary);
+    const fuelUsed = routeSummary ? calculateFuelUsed(routeSummary.distanceKm, fuel) : 0;
+    const fuelCost = calculateFuelCost(fuelUsed, fueltype);
 
-    let fuelCost = 0;
-    const fuel_95 = 73; // Припустимо, що ціна пального 73 грн за літр
-    const fuel_92 = 66.39;
-    const fuel_diesel = 88;
-    const fuel_lpg = 48; // Припустимо, що ціна пального 48 грн за літр
-    if (routeSummary && fueltype === "92") {
-        fuelCost = fuelUsed * fuel_92;
-    }
-    if (routeSummary && fueltype === "95") {
-        fuelCost = fuelUsed * fuel_95;
-    }
-    if (routeSummary && fueltype === "diesel") {
-        fuelCost = fuelUsed * fuel_diesel;
-    }
-    else if (routeSummary && fueltype === "lpg") {
-        fuelCost = fuelUsed * fuel_lpg; // Припустимо, що ціна газу 48 грн за літр
-    }
+    
+    
 
 
     return (

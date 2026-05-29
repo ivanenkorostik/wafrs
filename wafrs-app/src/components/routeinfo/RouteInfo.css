@@ -1,0 +1,44 @@
+.routeInfo {
+  margin-top: 14px;
+  color: rgb(31, 41, 55);
+}
+
+.routeInfo h5 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.routeInfo p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.routeInfo_error {
+  color: rgb(185, 28, 28);
+}
+
+.routeInfo_list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0;
+}
+
+.routeInfo_list div {
+  padding: 10px;
+  border-radius: 8px;
+  background-color: rgb(249, 250, 251);
+}
+
+.routeInfo_list dt {
+  margin-bottom: 4px;
+  color: rgb(107, 114, 128);
+  font-size: 12px;
+}
+
+.routeInfo_list dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+}

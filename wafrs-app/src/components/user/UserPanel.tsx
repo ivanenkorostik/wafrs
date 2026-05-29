@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { FaCircleUser, FaRightFromBracket, FaXmark } from "react-icons/fa6";
 import { getCurrentUser, loginUser, registerUser, type User } from "../../api/auth-api";
-import "./userPanel.css";
+import "./UserPanel.css";
+import { AUTH_TOKEN_KEY } from "../../constants/auth";
 
 type AuthMode = "login" | "register";
 
-const AUTH_TOKEN_KEY = "wafrs_auth_token";
+
 
 function UserPanel() {
     const [isAuthOpen, setIsAuthOpen] = useState(false);

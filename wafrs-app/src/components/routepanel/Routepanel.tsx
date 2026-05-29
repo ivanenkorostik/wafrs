@@ -1,7 +1,8 @@
-import './routepanel.css';
+import './Routepanel.css';
 import '../../styles/general.css';
-import RouteInfo from '../routeinfo/routeInfo';
-import type { ActivePoint, RouteResult, RouteSummary } from '../../types';
+import type { ActivePoint, RouteResult, RouteSummary,GeocodedPlace} from '../../types';
+import { useState } from "react";
+import RouteDetails from "./RouteDetails";
 
 type RoutePanelProps = {
   startPoint: string;
@@ -17,7 +18,13 @@ type RoutePanelProps = {
   canCreateRoute: boolean;
   selectedVehicleModel: string | null;
   fuelMode: string | null;
-  onStartPointChange: (value: string) => void;
+  startSuggestions: GeocodedPlace[];
+  endSuggestions: GeocodedPlace[];
+  isStartSearchLoading: boolean;
+  isEndSearchLoading: boolean;
+  startSearchError: string | null;
+  endSearchError: string | null;
+    onStartPointChange: (value: string) => void;
   onEndPointChange: (value: string) => void;
   setActivePoint: (value: ActivePoint) => void;
   onClearStart: () => void;
@@ -28,6 +35,8 @@ type RoutePanelProps = {
   onSelectRoute: (index: number) => void;
   onFuelTypeChange: (value: string) => void;
   onOpenModal: () => void;
+  onSelectStartPlace: (place: GeocodedPlace) => void;
+  onSelectEndPlace: (place: GeocodedPlace) => void;
   
 };
 
@@ -39,7 +48,6 @@ function RoutePanel({
   activePoint,
   routes,
   activeRouteIndex,
-  routeSummary,
   routeError,
   isRouteLoading,
   canCreateRoute,
@@ -53,8 +61,27 @@ function RoutePanel({
   onClearAll,
   onCreateRoute,
   onSelectRoute,
-  onOpenModal
+  onOpenModal,
+  startSuggestions,
+  endSuggestions,
+  isStartSearchLoading,
+  isEndSearchLoading,
+  startSearchError,
+  endSearchError,
+  onSelectStartPlace,
+  onSelectEndPlace,
+  
 }: RoutePanelProps) {
+
+  const [detailsRouteIndex, setDetailsRouteIndex] = useState<number | null>(null);
+  const detailsRoute = detailsRouteIndex !== null ? routes[detailsRouteIndex] ?? null : null;
+  function handleOpenRouteDetails(index: number) {
+    onSelectRoute(index);
+    setDetailsRouteIndex(index);
+  }
+  function handleCloseRouteDetails() {
+    setDetailsRouteIndex(null);
+  }
   
   return (
     <section className="routePanel" aria-label="Route planner">
@@ -74,6 +101,7 @@ function RoutePanel({
               onChange={(e) => onStartPointChange(e.target.value)}
               onFocus={() => setActivePoint("start")}
             />
+            
             <button
               className="routePanel_iconButton"
               type="button"
@@ -84,6 +112,28 @@ function RoutePanel({
               x
             </button>
           </div>
+          {isStartSearchLoading && (
+              <p className="routePanel_searchStatus">Шукаємо...</p>
+            )}
+
+            {startSearchError && (
+              <p className="routePanel_searchError">{startSearchError}</p>
+            )}
+
+            {startSuggestions.length > 0 && (
+              <div className="routePanel_suggestions">
+                {startSuggestions.map((place) => (
+                  <button
+                    key={place.id}
+                    type="button"
+                    className="routePanel_suggestion"
+                    onClick={() => onSelectStartPlace(place)}
+                  >
+                    {place.label}
+                  </button>
+                ))}
+              </div>
+            )}
         </div>
 
         <div className={`routePanel_field ${activePoint === "end" ? "routePanel_field--active" : ""}`}>
@@ -100,6 +150,7 @@ function RoutePanel({
               onChange={(e) => onEndPointChange(e.target.value)}
               onFocus={() => setActivePoint("end")}
             />
+            
             <button
               className="routePanel_iconButton"
               type="button"
@@ -110,6 +161,28 @@ function RoutePanel({
               x
             </button>
           </div>
+          {isEndSearchLoading && (
+              <p className="routePanel_searchStatus">Шукаємо...</p>
+            )}
+
+            {endSearchError && (
+              <p className="routePanel_searchError">{endSearchError}</p>
+            )}
+
+            {endSuggestions.length > 0 && (
+              <div className="routePanel_suggestions">
+                {endSuggestions.map((place) => (
+                  <button
+                    key={place.id}
+                    type="button"
+                    className="routePanel_suggestion"
+                    onClick={() => onSelectEndPlace(place)}
+                  >
+                    {place.label}
+                  </button>
+                ))}
+              </div>
+            )}
         </div>
 
         <section className="routePanel_myVehicle">
@@ -144,50 +217,55 @@ function RoutePanel({
         </button>
       </form>
 
-      {routes.length > 1 && !isRouteLoading && (
-        <div className="routePanel_routes" aria-label="Альтернативні маршрути">
-          <h5>Варіанти маршруту</h5>
+      <section className="routePanel_routes" aria-label="Маршрути">
+        <h2 className="routePanel_routesTitle">Маршрути</h2>
+        {isRouteLoading && (<p className="routePanel_routeNote">Будуємо маршрут...</p>)}
+
+        {routeError && (<p className="routePanel_searchError">{routeError}</p>)}
+
+        {routes.length > 0 && !isRouteLoading && (
           <div className="routePanel_routeList">
             {routes.map((route, index) => {
               const fuelLiters = (route.distanceKm / 100) * fuel;
               const isActive = index === activeRouteIndex;
-
+              const direction = `${startPoint || "Старт"} → ${endPoint || "Фініш"}`;
               return (
-                <button
+                <article
                   key={`${index}-${route.distanceKm}-${route.durationMin}`}
-                  className={`routePanel_routeOption ${isActive ? "routePanel_routeOption--active" : ""}`}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => onSelectRoute(index)}
-                >
-                  <span className="routePanel_routeTitle">
-                    {index === 0 ? "Основний" : `Альтернатива ${index}`}
-                  </span>
-                  <span>{route.distanceKm.toFixed(1)} км</span>
-                  <span>{Math.round(route.durationMin)} хв</span>
-                  <span>{fuelLiters.toFixed(1)} л</span>
-                </button>
+                  className={`routePanel_routeCard ${isActive ? "routePanel_routeCard--active" : ""}`}
+                  >
+                    <div className="routePanel_routeCardTop">
+                      <h3>Варіант {index + 1}</h3>
+                      <div className="routePanel_routeBadges">
+                        <span>{route.distanceKm.toFixed(1)} км</span>
+                        <span>{Math.round(route.durationMin)} хв</span>
+                        <span>{fuelLiters.toFixed(1)} л</span>
+                      </div>
+                    </div>
+                    <p className="routePanel_routeDirection">{direction}</p>
+                    <button className="routePanel_detailsButton"
+                    type="button"
+                    onClick={() => handleOpenRouteDetails(index)}>
+                      Детальніше
+                    </button>
+                </article>
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+        {routes.length === 0 && !isRouteLoading && !routeError && (
+    <p className="routePanel_emptyRoutes">інші маршрути.....</p>
+  )}
+  </section>
 
-      {routes.length === 1 && !isRouteLoading && !routeError && (
-        <p className="routePanel_routeNote">
-          Для цих точок OSRM повернув тільки один маршрут.
-        </p>
-      )}
-
-      <RouteInfo
-        routeSummary={routeSummary}
-        routeError={routeError}
-        isRouteLoading={isRouteLoading}
-        fuel={fuel}
-        fueltype={fueltype}
-        
+      <RouteDetails
+      isOpen={detailsRoute !== null}
+      route={detailsRoute}
+      fuel={fuel}
+      fueltype={fueltype}
+      onClose={handleCloseRouteDetails}
       />
-        </section>
+    </section>
   );
 }
 

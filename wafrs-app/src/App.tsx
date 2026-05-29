@@ -1,14 +1,16 @@
 import './App.css'
 import { useRef, useState } from "react";
 import MapView from './components/MapView'
-import Navbar from './components/navbar/navbar'
-import RoutePanel from './components/routepanel/routepanel'
-import Sidebar from './components/sidebar/sidebar'
-import UserPanel from './components/user/userPanel'
+import Navbar from './components/navbar/Navbar'
+import RoutePanel from './components/routepanel/Routepanel'
+import Sidebar from './components/sidebar/Sidebar'
+import UserPanel from './components/user/UserPanel'
 import { fetchRoutes } from './services/routeService'
-import type { ActivePoint, RouteResult, SelectedRoutePoint } from './types'
-import Modal from './components/modal';
+import type { ActivePoint, GeocodedPlace, RouteResult, SelectedRoutePoint } from './types'
+import Modal from './components/vechicle/Vechicle-modal';
 import type { Vehicle } from './api/mycar-api';
+import { usePlaceSearch } from './hooks/userPlaceSearh';
+import { getVehicleFuelUsage } from "./utils/fuel";
 
 function App() {
   const [startPoint, setStartPoint] = useState("");
@@ -26,8 +28,25 @@ function App() {
   const activeRoute = routes[activeRouteIndex] ?? null;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [startPlace, setStartPlace] = useState<GeocodedPlace | null>(null);
+  const [endPlace, setEndPlace] = useState<GeocodedPlace | null>(null);
+  const {
+  suggestions: startSuggestions,
+  setSuggestions: setStartSuggestions,
+  isLoading: isStartSearchLoading,
+  error: startSearchError,
+  setError: setStartSearchError,
+} = usePlaceSearch(startPoint, startPlace);
 
-  function clearRouteState() {
+const {
+  suggestions: endSuggestions,
+  setSuggestions: setEndSuggestions,
+  isLoading: isEndSearchLoading,
+  error: endSearchError,
+  setError: setEndSearchError,
+} = usePlaceSearch(endPoint, endPlace);
+
+function clearRouteState() {
     routeRequestController.current?.abort();
     routeRequestController.current = null;
     setRoutes([]);
@@ -46,23 +65,29 @@ function App() {
 
     if (activePoint === "start") {
       setStartPoint(coords);
+      setStartPlace(null);
+      setStartSuggestions([]);
       setStartMarker([lat, lng]);
     }
 
     if (activePoint === "end") {
       setEndPoint(coords);
+      setEndPlace(null);
+      setEndSuggestions([]);
       setEndMarker([lat, lng]);
     }
   }
 
   function handleStartPointChange(value: string) {
     setStartPoint(value);
+    setStartPlace(null);
     setStartMarker(null);
     clearRouteState();
   }
 
   function handleEndPointChange(value: string) {
     setEndPoint(value);
+    setEndPlace(null);
     setEndMarker(null);
     clearRouteState();
   }
@@ -71,12 +96,18 @@ function App() {
     setStartPoint("");
     setStartMarker(null);
     clearRouteState();
+    setStartPlace(null);
+    setStartSuggestions([]);
+    setStartSearchError(null);
   }
 
   function clearEndPoint() {
     setEndPoint("");
     setEndMarker(null);
     clearRouteState();
+    setEndPlace(null);
+    setEndSuggestions([]);
+    setEndSearchError(null);
   }
 
   function clearRoutePoints() {
@@ -86,13 +117,36 @@ function App() {
     setEndMarker(null);
     setActivePoint(null);
     clearRouteState();
+    setStartPlace(null);
+    setEndPlace(null);
+    setStartSuggestions([]);
+    setEndSuggestions([]);
+    setStartSearchError(null);
+    setEndSearchError(null);
+    setActivePoint(null);
+    clearRouteState();
   }
   function calculateFuel(value: number) {
     setisfuel(value);
   }
   function handleFuelTypeChange(value: string) {
   setfueltype(value);
-}
+  }
+  function selectStartPlace(place: GeocodedPlace) {
+    clearRouteState();
+    setStartPlace(place);
+    setStartPoint(place.label);
+    setStartMarker(place.point);
+    setStartSuggestions([]);
+  }
+  function selectEndPlace(place: GeocodedPlace) {
+    clearRouteState();
+    setEndPlace(place);
+    setEndPoint(place.label);
+    setEndMarker(place.point);
+    setEndSuggestions([]);
+  }
+
 const closeModal = () => {
   setIsModalOpen(false);
 };
@@ -100,9 +154,11 @@ const openModal = () => {
   setIsModalOpen(true);
 };
 
+  
+
   async function createRoute() {
-    if (!startMarker || !endMarker) {
-      setRouteError("Оберіть старт і фініш на карті.");
+    if (!startMarker  || !endMarker) {
+      setRouteError("Оберіть конкретний старт і фініш зі списку або на карті.");
       return;
     }
 
@@ -117,49 +173,26 @@ const openModal = () => {
       const nextRoutes = await fetchRoutes(startMarker, endMarker, controller.signal);
       setRoutes(nextRoutes);
       setActiveRouteIndex(0);
-    } catch (error) {
-      if (controller.signal.aborted) {
-        return;
-      }
-
-      setRoutes([]);
-      setActiveRouteIndex(0);
-      setRouteError(error instanceof Error ? error.message : "Маршрут не знайдено.");
-    } finally {
+    }catch (error) {
+    if (controller.signal.aborted) {
+      return;
+    }
+    setRoutes([]);
+    setActiveRouteIndex(0);
+    setRouteError(error instanceof Error ? error.message : "Маршрут не знайдено.");}
+    finally {
       if (routeRequestController.current === controller) {
-        routeRequestController.current = null;
-        setIsRouteLoading(false);
+      routeRequestController.current = null;
+      setIsRouteLoading(false);
+        }
       }
     }
-     
-  }
-  const averageSpeed = activeRoute
-    ? activeRoute.distanceKm / (activeRoute.durationMin / 60)
-    : 0;
 
-  let selectedVehicleFuel = isfuel;
-  let fuelMode: string | null = null;
-
-  if (selectedVehicle) {
-    const cityConsumption = selectedVehicle.fuel_city;
-    const cruiseConsumption = selectedVehicle.fuel_avg;
-
-    if (!activeRoute) {
-      selectedVehicleFuel = cruiseConsumption;
-    } else if (averageSpeed <= 35) {
-      selectedVehicleFuel = cityConsumption;
-      fuelMode = "Місто";
-    } else if (averageSpeed <= 65) {
-      selectedVehicleFuel = cityConsumption * 0.4 + cruiseConsumption * 0.6;
-      fuelMode = "Змішаний";
-    } else if (averageSpeed <= 90) {
-      selectedVehicleFuel = cruiseConsumption;
-      fuelMode = "Траса";
-    } else {
-      selectedVehicleFuel = cruiseConsumption * 1.15;
-      fuelMode = "Висока швидкість";
-    }
-  }
+  const {
+      fuel: selectedVehicleFuel,
+      fuelMode,
+    } = getVehicleFuelUsage(selectedVehicle, activeRoute,isfuel);
+  
 
   return (
     <main className='app'>
@@ -181,10 +214,18 @@ const openModal = () => {
         fueltype={selectedVehicle ? selectedVehicle.fuel_type : fueltype}
         routes={routes}
         activeRouteIndex={activeRouteIndex}
-        routeSummary={activeRoute}
         routeError={routeError}
         isRouteLoading={isRouteLoading}
         canCreateRoute={Boolean(startMarker && endMarker)}
+        startSuggestions={startSuggestions}
+        endSuggestions={endSuggestions}
+        routeSummary={activeRoute}
+        isStartSearchLoading={isStartSearchLoading}
+        isEndSearchLoading={isEndSearchLoading}
+        startSearchError={startSearchError}
+        endSearchError={endSearchError}
+        onSelectStartPlace={selectStartPlace}
+        onSelectEndPlace={selectEndPlace}
         onStartPointChange={handleStartPointChange}
         onEndPointChange={handleEndPointChange}
         setActivePoint={setActivePoint}

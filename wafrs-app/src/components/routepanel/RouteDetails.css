@@ -1,0 +1,45 @@
+.routeDetailsModal_overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.routeDetailsModal {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  border-radius: 12px;
+  padding: 24px;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+}
+
+.routeDetailsModal_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.routeDetailsModal_header h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 500;
+}
+
+.routeDetailsModal_close {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  background: #eee;
+  color: #111;
+  font-size: 20px;
+  cursor: pointer;
+}

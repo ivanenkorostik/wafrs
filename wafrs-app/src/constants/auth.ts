@@ -1,0 +1,1 @@
+export const AUTH_TOKEN_KEY = "wafrs_auth_token";

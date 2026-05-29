@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { saveVehicle, getVehicles, type Vehicle } from "../api/mycar-api";
+import { saveVehicle, getVehicles, type Vehicle } from "../../api/mycar-api";
 import { IoCloseSharp } from "react-icons/io5";
+import { AUTH_TOKEN_KEY } from "../../constants/auth";
 
-import './modal.css';
+import './Vechicle-modal.css';
 
 type ModalProps = {
   onClose: () => void;
@@ -23,7 +24,7 @@ function Modal({onClose, onSelectVehicle}:ModalProps) {
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
 
   
-  const token = localStorage.getItem("wafrs_auth_token");
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
   async function handleSave() {
     
     if (!token) {
@@ -49,7 +50,7 @@ function Modal({onClose, onSelectVehicle}:ModalProps) {
   }
   useEffect(() => {
   async function loadVehicles() {
-    const token = localStorage.getItem("wafrs_auth_token");
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
 
     if (!token) {
       setError("Користувач не авторизований");
