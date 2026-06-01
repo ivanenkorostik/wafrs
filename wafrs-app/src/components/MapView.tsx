@@ -118,8 +118,7 @@ export default function MapView({
                 weight: 4,
               }}
               eventHandlers={{
-                click: () => onSelectRoute(index),
-              }}
+                click: () => onSelectRoute(index),}}
             />
           )
         ))}

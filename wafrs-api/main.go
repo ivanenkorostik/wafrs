@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -117,6 +118,9 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintln(w, `{"database":"ok"}`)
 	})
+
+	http.HandleFunc("/api/ors-routes", orsRoutesHandler())
+	http.HandleFunc("/ors-routes", orsRoutesHandler())
 
 	savedRoutesHandlerWithAuth := authMiddleware(jwtSecret, savedRoutesHandler(db))
 	vehiclesHandlerWithAuth := authMiddleware(jwtSecret, saveVehiclesHandler(db))
@@ -385,6 +389,60 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 
 func writeError(w http.ResponseWriter, status int, message string) {
 	writeJSON(w, status, map[string]string{"error": message})
+}
+
+func orsRoutesHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+
+		apiKey := os.Getenv("OPENROUTESERVICE_API_KEY")
+		if apiKey == "" {
+			apiKey = os.Getenv("ORS_API_KEY")
+		}
+		if apiKey == "" {
+			writeError(w, http.StatusInternalServerError, "OpenRouteService API key is not configured")
+			return
+		}
+
+		req, err := http.NewRequestWithContext(
+			r.Context(),
+			http.MethodPost,
+			"https://api.openrouteservice.org/v2/directions/driving-car/geojson",
+			r.Body,
+		)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to create route request")
+			return
+		}
+
+		req.Header.Set("Accept", "application/json, application/geo+json")
+		req.Header.Set("Authorization", apiKey)
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{
+			Timeout: 20 * time.Second,
+		}
+
+		response, err := client.Do(req)
+		if err != nil {
+			writeError(w, http.StatusBadGateway, "failed to get route from OpenRouteService")
+			return
+		}
+		defer response.Body.Close()
+
+		w.Header().Set("Content-Type", response.Header.Get("Content-Type"))
+		if w.Header().Get("Content-Type") == "" {
+			w.Header().Set("Content-Type", "application/json")
+		}
+		w.WriteHeader(response.StatusCode)
+
+		if _, err := io.Copy(w, response.Body); err != nil {
+			log.Println("failed to proxy OpenRouteService response:", err)
+		}
+	}
 }
 
 // HANDLER FOR SAVING VEHICLE DATA

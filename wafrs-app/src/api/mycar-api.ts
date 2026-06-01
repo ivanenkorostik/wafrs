@@ -1,7 +1,7 @@
 const API_URL = "/api";
 
 
-export type VehiclePayload = {
+export type VehicleCreate = {
     model: string;
     fuel_avg: number;
     fuel_city: number;
@@ -15,7 +15,7 @@ export type Vehicle = {
   fuel_city: number;
   fuel_type: string;
 };
-export async function saveVehicle(payload: VehiclePayload, token: string){
+export async function saveVehicle(payload: VehicleCreate, token: string){
     const response = await fetch(`${API_URL}/my-vehicles`, {
         method: 'POST',
         headers: {

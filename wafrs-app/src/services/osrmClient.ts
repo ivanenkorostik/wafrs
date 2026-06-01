@@ -53,7 +53,6 @@ export async function fetchOsrmRoutes(points: RoutePoint[], alternatives: string
         message = data.message;
       }
     } catch {
-      // OSRM sometimes returns a plain HTTP error without JSON details.
     }
 
     throw new Error(message);

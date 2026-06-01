@@ -20,7 +20,7 @@ type OrsRouteResponse = {
   features?: OrsRouteFeature[];
 };
 
-const ORS_BASE_URL = "https://api.openrouteservice.org";
+const ORS_BASE_URL = "https://api.heigit.org/openrouteservice";
 const ORS_API_KEY = import.meta.env.VITE_OPENROUTESERVICE_API_KEY;
 const ORS_ALTERNATIVE_ROUTE_COUNT = 3;
 

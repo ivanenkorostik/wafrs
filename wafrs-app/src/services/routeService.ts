@@ -4,17 +4,29 @@ import { fetchOsrmRoutes } from "./osrmClient";
 import { MAX_ROUTES_TO_SHOW, ORS_MAX_ALTERNATIVE_DISTANCE_KM, REQUESTED_ALTERNATIVES } from "./routeConfig";
 
 export async function fetchRoutes(start: RoutePoint, end: RoutePoint, signal?: AbortSignal): Promise<RouteResult[]> {
-  const points = [start, end] satisfies RoutePoint[];
-  const osrmRoutes = await fetchOsrmRoutes(points, REQUESTED_ALTERNATIVES, signal);
+  const routePoints: RoutePoint[] = [start, end];
+  const osrmRoutes = await fetchOsrmRoutes(routePoints, REQUESTED_ALTERNATIVES, signal);
+
+  if (osrmRoutes.length === 0) {
+    return [];
+  }
+
   const mainRoute = osrmRoutes[0];
 
-  if (!mainRoute || mainRoute.distanceKm >= ORS_MAX_ALTERNATIVE_DISTANCE_KM) {
+  if (mainRoute.distanceKm >= ORS_MAX_ALTERNATIVE_DISTANCE_KM) {
     return osrmRoutes.slice(0, MAX_ROUTES_TO_SHOW);
   }
 
-  const orsRoutes = await fetchOrsRoutes(points, MAX_ROUTES_TO_SHOW, signal);
+  try {
+    const orsRoutes = await fetchOrsRoutes(routePoints, MAX_ROUTES_TO_SHOW, signal);
+    return orsRoutes.slice(0, MAX_ROUTES_TO_SHOW);
+  } catch (error) {
+    if (signal?.aborted) {
+      throw error;
+    }
 
-  return orsRoutes.slice(0, MAX_ROUTES_TO_SHOW);
+    return osrmRoutes.slice(0, MAX_ROUTES_TO_SHOW);
+  }
 }
 
 export async function fetchRoute(start: RoutePoint, end: RoutePoint, signal?: AbortSignal): Promise<RouteResult> {
