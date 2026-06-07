@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -128,6 +129,7 @@ func main() {
 
 	http.HandleFunc("/auth/register", registerHandler(db))
 	http.HandleFunc("/auth/login", loginHandler(db, jwtSecret))
+	http.HandleFunc("/api/my-vehicles", vehiclesHandlerWithAuth)
 	http.HandleFunc("/my-vehicles", vehiclesHandlerWithAuth)
 	http.HandleFunc("/api/saved-routes", savedRoutesHandlerWithAuth)
 	http.HandleFunc("/api/saved-routes/", savedRoutesHandlerWithAuth)
@@ -489,6 +491,37 @@ func saveVehiclesHandler(db *sql.DB) http.HandlerFunc {
 			}
 
 			writeJSON(w, http.StatusOK, vehicles)
+			return
+		}
+
+		if r.Method == http.MethodDelete {
+			vehicleID, err := strconv.Atoi(r.URL.Query().Get("id"))
+			if err != nil || vehicleID <= 0 {
+				writeError(w, http.StatusBadRequest, "invalid vehicle id")
+				return
+			}
+
+			result, err := db.Exec(
+				`DELETE FROM vehicles WHERE id = $1 AND user_id = $2`,
+				vehicleID,
+				user.ID,
+			)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "failed to delete vehicle")
+				return
+			}
+
+			deletedRows, err := result.RowsAffected()
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "failed to confirm vehicle deletion")
+				return
+			}
+			if deletedRows == 0 {
+				writeError(w, http.StatusNotFound, "vehicle not found")
+				return
+			}
+
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 

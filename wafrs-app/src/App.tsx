@@ -307,14 +307,24 @@ const openModal = () => {
         onSelectRoute={setActiveRouteIndex}
         onFuelTypeChange={handleFuelTypeChange}
         onOpenModal={openModal}
+        onClearSelectedVehicle={() => setSelectedVehicle(null)}
         selectedVehicleModel={selectedVehicle?.model ?? null}
         fuelMode={fuelMode}
         savedRoutes={savedRoutes}
         onSaveRoute={handleSaveRoute}
         onRemoveSavedRoute={handleRemoveSavedRoute}
       />
-      {isModalOpen && <Modal onClose={closeModal} onSelectVehicle={setSelectedVehicle}
-      />}
+      {isModalOpen && (
+        <Modal
+          onClose={closeModal}
+          onSelectVehicle={setSelectedVehicle}
+          onVehicleDeleted={(id) => {
+            setSelectedVehicle((currentVehicle) =>
+              currentVehicle?.id === id ? null : currentVehicle
+            );
+          }}
+        />
+      )}
       <Sidebar />
       {isSavedRoutesModalOpen && (
         <SavedRoutesModal

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { saveVehicle, getVehicles, type Vehicle } from "../../api/mycar-api";
+import { deleteVehicle, saveVehicle, getVehicles, type Vehicle } from "../../api/mycar-api";
 import { IoCloseSharp } from "react-icons/io5";
+import { FiTrash2 } from "react-icons/fi";
 import { AUTH_TOKEN_KEY } from "../../constants/auth";
 
 import './Vechicle-modal.css';
@@ -8,10 +9,11 @@ import './Vechicle-modal.css';
 type ModalProps = {
   onClose: () => void;
   onSelectVehicle: (vehicle: Vehicle) => void;
+  onVehicleDeleted: (id: number) => void;
 };
 
 
-function Modal({onClose, onSelectVehicle}:ModalProps) {
+function Modal({onClose, onSelectVehicle, onVehicleDeleted}:ModalProps) {
 
   const[model,setModel] = useState("");
   const [fuelAvg, setFuelAvg]= useState(0);
@@ -22,6 +24,7 @@ function Modal({onClose, onSelectVehicle}:ModalProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
+  const [deletingVehicleId, setDeletingVehicleId] = useState<number | null>(null);
 
   
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
@@ -54,6 +57,31 @@ function Modal({onClose, onSelectVehicle}:ModalProps) {
       setIsSaving(false);
     }
   }
+
+  async function handleDeleteVehicle(id: number) {
+    if (!token) {
+      setError("Користувач не авторизований");
+      return;
+    }
+
+    setDeletingVehicleId(id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await deleteVehicle(id, token);
+      setVehicles((currentVehicles) =>
+        currentVehicles.filter((vehicle) => vehicle.id !== id)
+      );
+      onVehicleDeleted(id);
+      setSuccess("Авто успішно видалено");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не вдалося видалити авто");
+    } finally {
+      setDeletingVehicleId(null);
+    }
+  }
+
   useEffect(() => {
   async function loadVehicles() {
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
@@ -96,20 +124,31 @@ function Modal({onClose, onSelectVehicle}:ModalProps) {
             <p>У вас ще немає збережених авто.</p>
           )}
           {!isLoadingVehicles && vehicles.map((vehicle) => (
-          <button
-            key={vehicle.id}
-            type="button"
-            className="vehicle-item"
-            onClick={() => {onSelectVehicle(vehicle); onClose();}}
-          >
-            <strong>{vehicle.model}</strong>
-            <span>Траса: {vehicle.fuel_avg} л/100 км</span>
-            <span>Місто: {vehicle.fuel_city} л/100 км</span>
-            <span>Пальне: {vehicle.fuel_type}</span>
-          </button>
+            <article className="vehicle-item" key={vehicle.id}>
+              <button
+                type="button"
+                className="vehicle-item-select"
+                onClick={() => {onSelectVehicle(vehicle); onClose();}}
+              >
+                <strong>{vehicle.model}</strong>
+                <span>Траса: {vehicle.fuel_avg} л/100 км</span>
+                <span>Місто: {vehicle.fuel_city} л/100 км</span>
+                <span>Пальне: {vehicle.fuel_type}</span>
+              </button>
+              <button
+                type="button"
+                className="vehicle-item-delete"
+                aria-label={`Видалити авто ${vehicle.model}`}
+                disabled={deletingVehicleId === vehicle.id}
+                onClick={() => handleDeleteVehicle(vehicle.id)}
+              >
+                <FiTrash2 aria-hidden="true" />
+              </button>
+            </article>
           ))}
         </div>
         <form className="vehicle-form">
+          <h3>Додати автомобіль</h3>
           <label className="modal_field">
             Модель авто:
             <input type ="text" value={model} onChange={(e)=> setModel(e.target.value)}/>
@@ -132,13 +171,13 @@ function Modal({onClose, onSelectVehicle}:ModalProps) {
               <option value="lpg">Газ</option>
             </select>
           </label>
-        </form>
-        {success && <p className="modal-success">{success}</p>}
-        {error && <p className="modal-error">{error}</p>}
+          {success && <p className="modal-success">{success}</p>}
+          {error && <p className="modal-error">{error}</p>}
 
-        <button type="button" className="modal-save-button" onClick={handleSave} disabled={isSaving}>
-          {isSaving ? "Збереження..." : "Зберегти"}
-        </button>
+          <button type="button" className="modal-save-button" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? "Збереження..." : "Зберегти"}
+          </button>
+        </form>
         
       </section>
     </div>

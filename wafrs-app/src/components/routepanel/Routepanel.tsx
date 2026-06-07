@@ -10,6 +10,17 @@ import { CgEditBlackPoint } from "react-icons/cg";
 import { LuMapPin } from "react-icons/lu";
 import { IoIosCloseCircle } from "react-icons/io";
 
+function shortenLocation(location: string, fallback: string) {
+  const words = location.trim().split(/\s+/).filter(Boolean);
+
+  if (words.length === 0) {
+    return fallback;
+  }
+
+  const shortened = words.slice(0, 3).join(" ");
+  return words.length > 3 ? `${shortened}...` : shortened;
+}
+
 type RoutePanelProps = {
   startPoint: string;
   endPoint: string;
@@ -41,6 +52,7 @@ type RoutePanelProps = {
   onSelectRoute: (index: number) => void;
   onFuelTypeChange: (value: string) => void;
   onOpenModal: () => void;
+  onClearSelectedVehicle: () => void;
   onSelectStartPlace: (place: GeocodedPlace) => void;
   onSelectEndPlace: (place: GeocodedPlace) => void;
   savedRoutes: SavedRoute[];
@@ -70,6 +82,7 @@ function RoutePanel({
   onCreateRoute,
   onSelectRoute,
   onOpenModal,
+  onClearSelectedVehicle,
   startSuggestions,
   endSuggestions,
   isStartSearchLoading,
@@ -209,13 +222,27 @@ function RoutePanel({
 
         <section className="routePanel_myVehicle">
           <p>Порахувати витрати</p>
-          <button onClick={onOpenModal} className="text-button" type="button">
-          + Додати авто
-          </button>
+          {!selectedVehicleModel && (
+            <button onClick={onOpenModal} className="text-button" type="button">
+              + Додати авто
+            </button>
+          )}
           {selectedVehicleModel && (
-          <p className="routePanel_myVehicleModel">
-            Обране авто: {selectedVehicleModel}
-          </p>)}
+            <div className="routePanel_selectedVehicleRow">
+              <p className="routePanel_myVehicleModel">
+                Обране авто: {selectedVehicleModel}
+              </p>
+              <button
+                className="routePanel_clearVehicle"
+                type="button"
+                aria-label="Очистити обране авто"
+                title="Очистити обране авто"
+                onClick={onClearSelectedVehicle}
+              >
+                <IoIosCloseCircle aria-hidden="true" />
+              </button>
+            </div>
+          )}
           {fuelMode && (
             <p className="routePanel_selectedVehicle">
               Режим витрати: {fuelMode}</p>)}
@@ -250,7 +277,7 @@ function RoutePanel({
             {routes.map((route, index) => {
               const fuelLiters = (route.distanceKm / 100) * fuel;
               const isActive = index === activeRouteIndex;
-              const direction = `${startPoint || "Старт"} → ${endPoint || "Фініш"}`;
+              const direction = `${shortenLocation(startPoint, "Старт")} → ${shortenLocation(endPoint, "Фініш")}`;
               const routePayload = {
                 start_location: startPoint || "Старт",
                 finish_location: endPoint || "Фініш",
@@ -280,12 +307,15 @@ function RoutePanel({
                   }}
                   >
                     <div className="routePanel_routeCardTop">
-                      <h3>Варіант {index + 1}</h3>
-                      <div className="routePanel_routeBadges">
-                        <span>{route.distanceKm.toFixed(1)} км</span>
-                        <span>{formatDuration(route.durationMin)}</span>
-                        <span>{fuelLiters.toFixed(1)} л</span>
-                      </div>
+                      <h3 className="routePanel_routeName">Варіант {index + 1}</h3>
+                      {index === 0 && (
+                        <span className="routePanel_primaryBadge">Основний</span>
+                      )}
+                    </div>
+                    <div className="routePanel_routeBadges">
+                      <span>{route.distanceKm.toFixed(1)} км</span>
+                      <span>{formatDuration(route.durationMin)}</span>
+                      <span>{fuelLiters.toFixed(1)} л</span>
                     </div>
                     <p className="routePanel_routeDirection">{direction}</p>
                     <div className="routePanel_routeCardBottom">

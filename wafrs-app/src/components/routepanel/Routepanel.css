@@ -120,6 +120,36 @@
   font-size: 16px;
 }
 
+.routePanel_selectedVehicleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.routePanel_selectedVehicleRow p {
+  margin-right: 0;
+}
+
+.routePanel_clearVehicle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border: none;
+  padding: 0;
+  border-radius: 50%;
+  color: #5058f2;
+  background: transparent;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.routePanel_clearVehicle:hover {
+  background: rgba(80, 88, 242, 0.1);
+}
+
 .text-button {
   border: none;
   padding: 0;
@@ -173,7 +203,7 @@
 .routePanel_routeCard {
   border: 2px solid #222;
   border-radius: 10px;
-  padding: 18px;
+  padding: 0 16px;
   background: #fff;
   cursor: pointer;
 }
@@ -194,37 +224,58 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
+  min-height: 42px;
 }
 
 .routePanel_routeCard h3 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 400;
+}
+
+.routePanel_routeName {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.routePanel_primaryBadge {
+  border-radius: 10px;
+  padding: 6px 10px;
+  background: #5058f2;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .routePanel_routeBadges {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
+  min-height: 46px;
+  padding: 6px 0;
 }
 
 .routePanel_routeBadges span {
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   background: #5058f2;
   color: #fff;
   font-size: 14px;
 }
 
 .routePanel_routeDirection {
-  margin: 14px 0 10px;
-  font-size: 16px;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 0;
+  font-size: 14px;
+  line-height: 1.4;
 }
 .routePanel_routeCardBottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 44px;
 }
 
 .routePanel_favoriteButton {

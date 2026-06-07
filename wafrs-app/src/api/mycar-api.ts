@@ -47,3 +47,17 @@ export async function getVehicles(token: string): Promise<Vehicle[]> {
 
   return data;
 }
+
+export async function deleteVehicle(id: number, token: string): Promise<void> {
+  const response = await fetch(`${API_URL}/my-vehicles?id=${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || "Не вдалося видалити авто");
+  }
+}
