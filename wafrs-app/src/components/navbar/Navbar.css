@@ -1,7 +1,19 @@
 .navbar{
     display: flex;
     flex-direction: row;
+    align-items: center;
     justify-content: flex-end;
+    gap: 12px;
+    padding: 0 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+.navbar-title {
+    color: #111;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 .navbar-icon {
     width: 30px;
@@ -9,8 +21,17 @@
     color: rgb(0, 0, 0);
 }
 .navbar-iconButton {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
   border: none;
+  border-radius: 8px;
   background: transparent;
   padding: 0;
   cursor: pointer;
+}
+
+.navbar-iconButton:focus-visible {
+  outline: 3px solid rgba(80, 88, 242, 0.35);
 }

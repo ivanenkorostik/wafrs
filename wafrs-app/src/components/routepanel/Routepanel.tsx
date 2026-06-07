@@ -6,6 +6,9 @@ import RouteDetails from "./RouteDetails";
 import { formatDuration } from '../../utils/routeFormat';
 import FavoriteRouteButton from "./FavoriteRouteButton";
 import type { SavedRoutePayload } from "../../api/save_route";
+import { CgEditBlackPoint } from "react-icons/cg";
+import { LuMapPin } from "react-icons/lu";
+import { IoIosCloseCircle } from "react-icons/io";
 
 type RoutePanelProps = {
   startPoint: string;
@@ -93,32 +96,38 @@ function RoutePanel({
   
   return (
     <section className="routePanel" aria-label="Route planner">
+      <span className="navbar-title">Дорожня інструкція</span>
       <form className="routePanel_form">
         <div className={`routePanel_field ${activePoint === "start" ? "routePanel_field--active" : ""}`}>
-          <label htmlFor="start">Звідки</label>
-          <div className="routePanel_inputRow">
-            <input 
-              id="start" 
-              type="text" 
-              value={startPoint}
-              placeholder={
-                activePoint === "start"
-                  ? "Введіть місто або виберіть на карті"
-                  : "Початкова точка маршруту"
-              }
-              onChange={(e) => onStartPointChange(e.target.value)}
-              onFocus={() => setActivePoint("start")}
-            />
-            
-            <button
-              className="routePanel_iconButton"
-              type="button"
-              aria-label="Очистити початкову точку"
-              disabled={!startPoint}
-              onClick={onClearStart}
-            >
-              x
-            </button>
+          <div className="routePanel_fieldRow">
+            <label className="routePanel_fieldIcon" htmlFor="start">
+              <CgEditBlackPoint aria-hidden="true" />
+              <span className="routePanel_visuallyHidden">Звідки</span>
+            </label>
+            <div className="routePanel_inputRow">
+              <input
+                id="start"
+                type="text"
+                value={startPoint}
+                placeholder={
+                  activePoint === "start"
+                    ? "Введіть місто або виберіть на карті"
+                    : "Початкова точка маршруту"
+                }
+                onChange={(e) => onStartPointChange(e.target.value)}
+                onFocus={() => setActivePoint("start")}
+              />
+
+              <button
+                className="routePanel_iconButton"
+                type="button"
+                aria-label="Очистити початкову точку"
+                disabled={!startPoint}
+                onClick={onClearStart}
+              >
+                <IoIosCloseCircle aria-hidden="true" />
+              </button>
+            </div>
           </div>
           {isStartSearchLoading && (
               <p className="routePanel_searchStatus">Шукаємо...</p>
@@ -145,29 +154,34 @@ function RoutePanel({
         </div>
 
         <div className={`routePanel_field ${activePoint === "end" ? "routePanel_field--active" : ""}`}>
-          <label htmlFor="end">Куди</label>
-          <div className="routePanel_inputRow">
-            <input 
-              id="end" 
-              type="text" 
-              value={endPoint}
-              placeholder={activePoint === "end"   
-                ? "Введіть місто або виберіть на карті"
-                : "Кінцева точка маршруту"
-              }
-              onChange={(e) => onEndPointChange(e.target.value)}
-              onFocus={() => setActivePoint("end")}
-            />
-            
-            <button
-              className="routePanel_iconButton"
-              type="button"
-              aria-label="Очистити кінцеву точку"
-              disabled={!endPoint}
-              onClick={onClearEnd}
-            >
-              x
-            </button>
+          <div className="routePanel_fieldRow">
+            <label className="routePanel_fieldIcon routePanel_fieldIcon--end" htmlFor="end">
+              <LuMapPin aria-hidden="true" />
+              <span className="routePanel_visuallyHidden">Куди</span>
+            </label>
+            <div className="routePanel_inputRow">
+              <input
+                id="end"
+                type="text"
+                value={endPoint}
+                placeholder={activePoint === "end"
+                  ? "Введіть місто або виберіть на карті"
+                  : "Кінцева точка маршруту"
+                }
+                onChange={(e) => onEndPointChange(e.target.value)}
+                onFocus={() => setActivePoint("end")}
+              />
+
+              <button
+                className="routePanel_iconButton"
+                type="button"
+                aria-label="Очистити кінцеву точку"
+                disabled={!endPoint}
+                onClick={onClearEnd}
+              >
+                <IoIosCloseCircle aria-hidden="true" />
+              </button>
+            </div>
           </div>
           {isEndSearchLoading && (
               <p className="routePanel_searchStatus">Шукаємо...</p>
@@ -194,6 +208,10 @@ function RoutePanel({
         </div>
 
         <section className="routePanel_myVehicle">
+          <p>Порахувати витрати</p>
+          <button onClick={onOpenModal} className="text-button" type="button">
+          + Додати авто
+          </button>
           {selectedVehicleModel && (
           <p className="routePanel_myVehicleModel">
             Обране авто: {selectedVehicleModel}
@@ -201,10 +219,6 @@ function RoutePanel({
           {fuelMode && (
             <p className="routePanel_selectedVehicle">
               Режим витрати: {fuelMode}</p>)}
-          <p>Порахуй витрати</p>
-          <button onClick={onOpenModal} className="text-button" type="button">
-          + Додати авто
-          </button>
         </section>           
         <button
           className="routePanel_button"
@@ -212,7 +226,7 @@ function RoutePanel({
           disabled={!canCreateRoute || isRouteLoading}
           onClick={onCreateRoute}
         >
-          {isRouteLoading ? "Будуємо..." : "Створити маршрут"}
+          {isRouteLoading ? "Будуємо..." : "Побудувати маршрут"}
         </button>
 
         <button

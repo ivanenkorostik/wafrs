@@ -15,7 +15,7 @@ export type Vehicle = {
   fuel_city: number;
   fuel_type: string;
 };
-export async function saveVehicle(payload: VehicleCreate, token: string){
+export async function saveVehicle(payload: VehicleCreate, token: string): Promise<Vehicle> {
     const response = await fetch(`${API_URL}/my-vehicles`, {
         method: 'POST',
         headers: {

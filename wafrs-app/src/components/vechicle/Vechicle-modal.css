@@ -74,6 +74,48 @@
     outline: none;
     transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
+
+.modal_field select {
+  width: 100%;
+  height: 30px;
+  border: 1px solid rgb(209, 213, 219);
+  border-radius: 6px;
+  padding: 0 10px;
+  color: rgb(17, 24, 39);
+  background-color: rgb(249, 250, 251);
+  font: inherit;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.modal_field input:focus,
+.modal_field select:focus {
+  border-color: #5058f2;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(80, 88, 242, 0.18);
+}
+
+.modal-content .modal-success {
+  margin: 14px 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #166534;
+  background: #dcfce7;
+  font-weight: 600;
+  animation: modal-success-in 220ms ease-out;
+}
+
+@keyframes modal-success-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .modal-save-button {
   width: 100%;
   height: 32px;

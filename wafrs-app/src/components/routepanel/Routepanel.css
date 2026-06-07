@@ -2,48 +2,117 @@
   position: fixed;
   left: 24px;
   top: 24px;
-  width: min(400px, calc(100vw - 28px));
-  max-height: calc(100vh - 48px);
+  width: min(360px, calc(100vw - 28px));
+  max-height: calc(90vh - 48px);
   overflow-y: auto;
   padding: 14px;
   border-radius: 8px;
-  background: #f8f8f8;
+  background: #ffffff;
   color: #111;
-  
   z-index: 500;
 }
 
 .routePanel_form {
-  border: 1px solid #222;
+
   border-radius: 8px;
-  padding: 22px 34px;
+  padding: 15px 15px;
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-.routePanel_field label {
-  font-size: 18px;
-  font-weight: 400;
-  color: #111;
+.routePanel_fieldRow {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.routePanel_fieldIcon {
+  display: grid;
+  place-items: center;
+  color: #222;
+  font-size: 22px;
+}
+
+.routePanel_fieldIcon--end {
+  color: #d14334;
+}
+
+.routePanel_visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .routePanel_inputRow {
+  position: relative;
   display: block;
+  min-width: 0;
 }
 
 .routePanel_field input {
   width: 100%;
-  height: 48px;
+  height: 40px;
   border: 1px solid #222;
   border-radius: 10px;
-  padding: 0 14px;
+  padding: 0 34px 0 14px;
   font-size: 13px;
   background: #fff;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.routePanel_field input:focus,
+.routePanel_field--active input {
+  border-color: #5058f2;
+  box-shadow: 0 0 0 3px rgba(80, 88, 242, 0.18);
 }
 
 .routePanel_iconButton {
-  display: none;
+  position: absolute;
+  top: -9px;
+  right: -8px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  padding: 0;
+  color: #5058f2;
+  background: #fff;
+  border-radius: 50%;
+  font-size: 22px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.85);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.routePanel_iconButton svg {
+  display: block;
+}
+
+.routePanel_inputRow:hover .routePanel_iconButton:not(:disabled),
+.routePanel_inputRow:focus-within .routePanel_iconButton:not(:disabled) {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.routePanel_iconButton:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  outline: 2px solid #5058f2;
+  outline-offset: 2px;
 }
 
 .routePanel_myVehicle {
@@ -61,18 +130,30 @@
 }
 
 .routePanel_button {
-  height: 48px;
+  height: 40px;
   border: none;
   border-radius: 10px;
   background: #5058f2;
   color: #fff;
-  font-size: 16px;
+  font-size: 13px;
   cursor: pointer;
+}
+
+.routePanel_button:disabled {
+  background: #aeb2e8;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: not-allowed;
+  opacity: 0.75;
 }
 
 .routePanel_button--secondary {
   background: #dedede;
   color: #111;
+}
+
+.routePanel_button--secondary:disabled {
+  background: #ededed;
+  color: #888;
 }
 .routePanel_routes {
   margin-top: 10px;
@@ -90,7 +171,7 @@
 }
 
 .routePanel_routeCard {
-  border: 2px solid #5058f2;
+  border: 2px solid #222;
   border-radius: 10px;
   padding: 18px;
   background: #fff;
@@ -104,7 +185,8 @@
 }
 
 .routePanel_routeCard:focus-visible {
-  outline: 3px solid rgba(80, 88, 242, 0.35);
+  border-color: #5058f2;
+  outline: 3px solid rgba(80, 88, 242, 0.25);
   outline-offset: 2px;
 }
 

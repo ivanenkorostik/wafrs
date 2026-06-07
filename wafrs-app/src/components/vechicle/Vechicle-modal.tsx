@@ -39,9 +39,15 @@ function Modal({onClose, onSelectVehicle}:ModalProps) {
     };
     setIsSaving(true);
     setError(null);
+    setSuccess(null);
     try {
-      await saveVehicle(payload, token);
-      setSuccess("Інформацію про авто збережено успішно");
+      const createdVehicle = await saveVehicle(payload, token);
+      setVehicles((currentVehicles) => [createdVehicle, ...currentVehicles]);
+      setModel("");
+      setFuelAvg(0);
+      setFuelCity(0);
+      setFuelType("");
+      setSuccess(`Авто «${createdVehicle.model}» успішно додано`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Помилка при збереженні інформації про авто");
     } finally {
