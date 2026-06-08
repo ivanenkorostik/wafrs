@@ -20,6 +20,7 @@ import {
   type SavedRoutePayload,
 } from './api/save_route';
 import type { SavedRoute } from './types';
+import { searchPlace } from './services/geocoding';
 
 function App() {
   const [startPoint, setStartPoint] = useState("");
@@ -237,6 +238,44 @@ const openModal = () => {
       setIsSavedRoutesModalOpen(false);
     }
 
+    async function handleSelectSavedRoute(route: SavedRoute) {
+      setIsSavedRoutesLoading(true);
+      setSavedRoutesError(null);
+
+      try {
+        const [startPlaces, endPlaces] = await Promise.all([
+          searchPlace(route.start_location),
+          searchPlace(route.finish_location),
+        ]);
+        const selectedStartPlace = startPlaces[0];
+        const selectedEndPlace = endPlaces[0];
+
+        if (!selectedStartPlace || !selectedEndPlace) {
+          throw new Error("Не вдалося знайти точки збереженого маршруту");
+        }
+
+        clearRouteState();
+        setStartPoint(route.start_location);
+        setEndPoint(route.finish_location);
+        setStartPlace(selectedStartPlace);
+        setEndPlace(selectedEndPlace);
+        setStartMarker(selectedStartPlace.point);
+        setEndMarker(selectedEndPlace.point);
+        setStartSuggestions([]);
+        setEndSuggestions([]);
+        setStartSearchError(null);
+        setEndSearchError(null);
+        setActivePoint(null);
+        setIsSavedRoutesModalOpen(false);
+      } catch (error) {
+        setSavedRoutesError(
+          error instanceof Error ? error.message : "Не вдалося відкрити маршрут"
+        );
+      } finally {
+        setIsSavedRoutesLoading(false);
+      }
+    }
+
     async function handleSaveRoute(payload: SavedRoutePayload) {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
 
@@ -333,6 +372,7 @@ const openModal = () => {
           error={savedRoutesError}
           onClose={handleCloseSavedRoutes}
           onDeleteRoute={handleRemoveSavedRoute}
+          onSelectRoute={handleSelectSavedRoute}
         />
     )}
     </main>

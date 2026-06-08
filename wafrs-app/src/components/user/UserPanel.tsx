@@ -10,6 +10,7 @@ type AuthMode = "login" | "register";
 
 function UserPanel() {
     const [isAuthOpen, setIsAuthOpen] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [authMode, setAuthMode] = useState<AuthMode>("login");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -47,6 +48,7 @@ function UserPanel() {
     function logout() {
         localStorage.removeItem(AUTH_TOKEN_KEY);
         setUser(null);
+        setIsProfileOpen(false);
     }
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -77,28 +79,50 @@ function UserPanel() {
                 className="userPanel_iconButton"
                 type="button"
                 onClick={() => {
-                    if (!user) {
-                        openAuth("login");
-                    }
+                    user ? setIsProfileOpen(true) : openAuth("login");
                 }}
                 aria-label={user ? "Профіль користувача" : "Увійти"}
                 title={user ? user.email : "Увійти"}
             >
                 <FaCircleUser className="user-icon" />
+                {user && <span className="userPanel_status" aria-label="Користувач авторизований" />}
             </button>
 
-            {user && (
-                <div className="userPanel_menu">
-                    <span className="userPanel_email">{user.email}</span>
-                    <button
-                        className="userPanel_logout"
-                        type="button"
-                        onClick={logout}
-                        aria-label="Вийти"
-                        title="Вийти"
+            {user && isProfileOpen && (
+                <div
+                    className="profileModal_overlay"
+                    role="presentation"
+                    onMouseDown={() => setIsProfileOpen(false)}
+                >
+                    <section
+                        className="profileModal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="profile-modal-title"
+                        onMouseDown={(event) => event.stopPropagation()}
                     >
-                        <FaRightFromBracket />
-                    </button>
+                        <div className="profileModal_header">
+                            <h2 id="profile-modal-title">Профіль</h2>
+                            <button
+                                className="profileModal_close"
+                                type="button"
+                                onClick={() => setIsProfileOpen(false)}
+                                aria-label="Закрити"
+                            >
+                                <FaXmark />
+                            </button>
+                        </div>
+                        <p className="profileModal_label">Email</p>
+                        <p className="profileModal_email">{user.email}</p>
+                        <button
+                            className="profileModal_logout"
+                            type="button"
+                            onClick={logout}
+                        >
+                            <FaRightFromBracket />
+                            Вийти
+                        </button>
+                    </section>
                 </div>
             )}
 

@@ -45,6 +45,17 @@
   border: 2px solid #5058f2;
   border-radius: 10px;
   padding: 26px 16px;
+  cursor: pointer;
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+.savedRoutes_card:hover {
+  box-shadow: 0 0 0 3px rgba(80, 88, 242, 0.14);
+}
+
+.savedRoutes_card:focus-visible {
+  outline: 3px solid rgba(80, 88, 242, 0.3);
+  outline-offset: 2px;
 }
 
 .savedRoutes_delete {

@@ -31,9 +31,9 @@ body {
   position: absolute;
   top: 10px;
   right: 80px;
-  width: auto;
-  min-width: 230px;
-  height: 60px;
+  width: 50px;
+  min-width: 0;
+  height: 50px;
   z-index: 10;
 }
 .userPanel {

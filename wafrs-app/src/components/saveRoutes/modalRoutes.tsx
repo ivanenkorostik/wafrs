@@ -7,6 +7,7 @@ type SavedRoutesModalProps = {
   error: string | null;
   onClose: () => void;
   onDeleteRoute: (id: number) => Promise<void>;
+  onSelectRoute: (route: SavedRoute) => Promise<void>;
 };
 
 function SavedRoutesModal({
@@ -15,6 +16,7 @@ function SavedRoutesModal({
   error,
   onClose,
   onDeleteRoute,
+  onSelectRoute,
 }: SavedRoutesModalProps) {
   return (
     <div className="savedRoutes_overlay" onClick={onClose}>
@@ -37,11 +39,27 @@ function SavedRoutesModal({
 
         <div className="savedRoutes_list">
           {savedRoutes.map((route) => (
-            <article className="savedRoutes_card" key={route.id}>
+            <article
+              className="savedRoutes_card"
+              key={route.id}
+              role="button"
+              tabIndex={0}
+              aria-label={`Відкрити маршрут ${route.start_location} — ${route.finish_location}`}
+              onClick={() => onSelectRoute(route)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelectRoute(route);
+                }
+              }}
+            >
               <button
                 className="savedRoutes_delete"
                 type="button"
-                onClick={() => onDeleteRoute(route.id)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDeleteRoute(route.id);
+                }}
                 aria-label="Видалити маршрут"
               >
                 ×
